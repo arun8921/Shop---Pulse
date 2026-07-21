@@ -1,0 +1,3 @@
+USE shop_pulse;
+ALTER TABLE shops
+  ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE;
