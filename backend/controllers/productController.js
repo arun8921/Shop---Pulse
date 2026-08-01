@@ -1,4 +1,26 @@
 const db = require("../config/db");
+const {
+  ValidationError,
+  ensureOnlyFields,
+  hasOwn,
+  parsePositiveId,
+  parsePositivePrice,
+  parseCoordinate,
+  parseRadius,
+  requiredText,
+  respondWithError,
+} = require("../utils/validation");
+
+const PRODUCT_STATUSES = ["available", "out_of_stock", "few_left"];
+const PRODUCT_WRITE_FIELDS = ["shop_id", "name", "price", "availability_status"];
+const PRODUCT_UPDATE_FIELDS = ["name", "price", "availability_status"];
+
+function parseAvailabilityStatus(value) {
+  if (typeof value !== "string" || !PRODUCT_STATUSES.includes(value)) {
+    throw new ValidationError("availability_status must be available, few_left, or out_of_stock.");
+  }
+  return value;
+}
 
 async function ownerOwnsShop(shopId, ownerId) {
   const [rows] = await db.query("SELECT owner_id FROM shops WHERE shop_id = ?", [shopId]);
@@ -8,14 +30,15 @@ async function ownerOwnsShop(shopId, ownerId) {
 
 async function createProduct(req, res) {
   try {
-    const { shop_id, name, price, availability_status } = req.body;
-    const owner_id = req.user.user_id;
+    ensureOnlyFields(req.body, PRODUCT_WRITE_FIELDS);
+    const shopId = parsePositiveId(req.body.shop_id, "Shop ID");
+    const name = requiredText(req.body.name, "Product name", { min: 1, max: 150 });
+    const price = parsePositivePrice(req.body.price);
+    const status = req.body.availability_status === undefined
+      ? "available"
+      : parseAvailabilityStatus(req.body.availability_status);
 
-    if (!shop_id || !name || price === undefined) {
-      return res.status(400).json({ message: "shop_id, name, and price are required." });
-    }
-
-    const { exists, owns } = await ownerOwnsShop(shop_id, owner_id);
+    const { exists, owns } = await ownerOwnsShop(shopId, req.user.user_id);
     if (!exists) {
       return res.status(404).json({ message: "Shop not found." });
     }
@@ -23,162 +46,189 @@ async function createProduct(req, res) {
       return res.status(403).json({ message: "You do not own this shop." });
     }
 
-    const status = ["available", "out_of_stock", "few_left"].includes(availability_status)
-      ? availability_status
-      : "available";
-
     const [result] = await db.query(
       "INSERT INTO products (shop_id, name, price, availability_status) VALUES (?, ?, ?, ?)",
-      [shop_id, name, price, status]
+      [shopId, name, price, status]
     );
 
     return res.status(201).json({ message: "Product added successfully.", product_id: result.insertId });
   } catch (err) {
-    console.error("Create product error:", err);
-    return res.status(500).json({ message: "Something went wrong while adding the product." });
+    return respondWithError(res, err, "Something went wrong while adding the product.", "Create product error:");
   }
 }
 
 async function getProductsByShop(req, res) {
   try {
-    const { shopId } = req.params;
+    const shopId = parsePositiveId(req.params.shopId, "Shop ID");
+    const [shopRows] = await db.query(
+      "SELECT shop_id FROM shops WHERE shop_id = ? AND is_verified = TRUE",
+      [shopId]
+    );
+    if (shopRows.length === 0) {
+      return res.status(404).json({ message: "Shop not found or not yet verified." });
+    }
+
     const [rows] = await db.query(
-      "SELECT product_id, shop_id, name, price, availability_status, updated_at FROM products WHERE shop_id = ? ORDER BY name ASC",
+      `SELECT product_id, shop_id, name, price, availability_status, updated_at
+       FROM products
+       WHERE shop_id = ?
+       ORDER BY name ASC, product_id ASC`,
       [shopId]
     );
     return res.json({ products: rows });
   } catch (err) {
-    console.error("Get products by shop error:", err);
-    return res.status(500).json({ message: "Something went wrong." });
+    return respondWithError(res, err, "Something went wrong.", "Get products by shop error:");
   }
 }
 
 async function getMyProducts(req, res) {
   try {
-    const owner_id = req.user.user_id;
     const [rows] = await db.query(
-      `SELECT p.product_id, p.shop_id, s.name AS shop_name, p.name, p.price, p.availability_status, p.updated_at
+      `SELECT p.product_id, p.shop_id, s.name AS shop_name, s.is_verified, s.current_status,
+              p.name, p.price, p.availability_status, p.updated_at
        FROM products p
        JOIN shops s ON p.shop_id = s.shop_id
        WHERE s.owner_id = ?
-       ORDER BY s.name, p.name ASC`,
-      [owner_id]
+       ORDER BY s.name ASC, p.name ASC, p.product_id ASC`,
+      [req.user.user_id]
     );
     return res.json({ products: rows });
   } catch (err) {
-    console.error("Get my products error:", err);
-    return res.status(500).json({ message: "Something went wrong." });
+    return respondWithError(res, err, "Something went wrong.", "Get my products error:");
   }
 }
 
 async function updateProduct(req, res) {
   try {
-    const { id } = req.params;
-    const { price, availability_status } = req.body;
-    const owner_id = req.user.user_id;
+    ensureOnlyFields(req.body, PRODUCT_UPDATE_FIELDS);
+    if (Object.keys(req.body).length === 0) {
+      return res.status(400).json({ message: "Provide at least one product field to update." });
+    }
 
+    const productId = parsePositiveId(req.params.id, "Product ID");
     const [rows] = await db.query(
       `SELECT p.product_id, s.owner_id
-       FROM products p JOIN shops s ON p.shop_id = s.shop_id
+       FROM products p
+       JOIN shops s ON p.shop_id = s.shop_id
        WHERE p.product_id = ?`,
-      [id]
+      [productId]
     );
-
     if (rows.length === 0) {
       return res.status(404).json({ message: "Product not found." });
     }
-    if (rows[0].owner_id !== owner_id) {
+    if (rows[0].owner_id !== req.user.user_id) {
       return res.status(403).json({ message: "You do not own this product's shop." });
-    }
-
-    if (availability_status && !["available", "out_of_stock", "few_left"].includes(availability_status)) {
-      return res.status(400).json({ message: "Invalid availability_status." });
     }
 
     const fields = [];
     const values = [];
-    if (price !== undefined) {
+    if (hasOwn(req.body, "name")) {
+      fields.push("name = ?");
+      values.push(requiredText(req.body.name, "Product name", { min: 1, max: 150 }));
+    }
+    if (hasOwn(req.body, "price")) {
       fields.push("price = ?");
-      values.push(price);
+      values.push(parsePositivePrice(req.body.price));
     }
-    if (availability_status !== undefined) {
+    if (hasOwn(req.body, "availability_status")) {
       fields.push("availability_status = ?");
-      values.push(availability_status);
+      values.push(parseAvailabilityStatus(req.body.availability_status));
     }
 
-    if (fields.length === 0) {
-      return res.status(400).json({ message: "Provide at least one of price or availability_status to update." });
-    }
-
-    values.push(id);
+    values.push(productId);
     await db.query(`UPDATE products SET ${fields.join(", ")} WHERE product_id = ?`, values);
-
     return res.json({ message: "Product updated successfully." });
   } catch (err) {
-    console.error("Update product error:", err);
-    return res.status(500).json({ message: "Something went wrong." });
+    return respondWithError(res, err, "Something went wrong.", "Update product error:");
   }
 }
 
 async function deleteProduct(req, res) {
+  let connection;
+  let transactionStarted = false;
   try {
-    const { id } = req.params;
-    const owner_id = req.user.user_id;
+    const productId = parsePositiveId(req.params.id, "Product ID");
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+    transactionStarted = true;
 
-    const [rows] = await db.query(
+    const [productRows] = await connection.query(
       `SELECT p.product_id, s.owner_id
-       FROM products p JOIN shops s ON p.shop_id = s.shop_id
-       WHERE p.product_id = ?`,
-      [id]
+       FROM products p
+       JOIN shops s ON p.shop_id = s.shop_id
+       WHERE p.product_id = ?
+       FOR UPDATE`,
+      [productId]
     );
-
-    if (rows.length === 0) {
+    if (productRows.length === 0) {
+      await connection.rollback();
+      transactionStarted = false;
       return res.status(404).json({ message: "Product not found." });
     }
-    if (rows[0].owner_id !== owner_id) {
+    if (productRows[0].owner_id !== req.user.user_id) {
+      await connection.rollback();
+      transactionStarted = false;
       return res.status(403).json({ message: "You do not own this product's shop." });
     }
 
-    await db.query("DELETE FROM products WHERE product_id = ?", [id]);
+    const [orderRows] = await connection.query(
+      "SELECT order_id FROM orders WHERE product_id = ? LIMIT 1 FOR UPDATE",
+      [productId]
+    );
+    if (orderRows.length > 0) {
+      await connection.rollback();
+      transactionStarted = false;
+      return res.status(409).json({
+        message: "This product cannot be deleted because it is referenced by one or more orders. Mark it out of stock instead.",
+      });
+    }
+
+    await connection.query("DELETE FROM products WHERE product_id = ?", [productId]);
+    await connection.commit();
+    transactionStarted = false;
     return res.json({ message: "Product deleted successfully." });
   } catch (err) {
-    console.error("Delete product error:", err);
-    return res.status(500).json({ message: "Something went wrong." });
+    if (transactionStarted && connection) {
+      await connection.rollback();
+    }
+    return respondWithError(res, err, "Something went wrong.", "Delete product error:");
+  } finally {
+    if (connection) connection.release();
   }
 }
 
 async function searchProducts(req, res) {
   try {
-    const { q, lat, lng, radius } = req.query;
+    const queryText = requiredText(req.query.q, "q", { min: 1, max: 100 });
+    const latitude = parseCoordinate(req.query.lat, "lat", -90, 90);
+    const longitude = parseCoordinate(req.query.lng, "lng", -180, 180);
+    const searchRadius = parseRadius(req.query.radius);
 
-    if (!q || !lat || !lng) {
-      return res.status(400).json({ message: "q, lat, and lng query parameters are required." });
-    }
-
-    const searchRadius = radius ? parseFloat(radius) : 3;
-
-    const query = `
-      SELECT
+    const distanceExpression = `(6371 * acos(
+      LEAST(1, GREATEST(-1,
+        cos(radians(?)) * cos(radians(s.latitude)) *
+        cos(radians(s.longitude) - radians(?)) +
+        sin(radians(?)) * sin(radians(s.latitude))
+      ))
+    ))`;
+    const [rows] = await db.query(
+      `SELECT
         p.product_id, p.name AS product_name, p.price, p.availability_status,
         s.shop_id, s.name AS shop_name, s.address, s.current_status,
-        s.latitude, s.longitude,
-        ( 6371 * acos(
-            cos(radians(?)) * cos(radians(s.latitude)) *
-            cos(radians(s.longitude) - radians(?)) +
-            sin(radians(?)) * sin(radians(s.latitude))
-        ) ) AS distance_km
+        s.latitude, s.longitude, c.name AS category_name,
+        ${distanceExpression} AS distance_km
       FROM products p
       JOIN shops s ON p.shop_id = s.shop_id
-      WHERE p.name LIKE ?
+      LEFT JOIN categories c ON s.category_id = c.category_id
+      WHERE s.is_verified = TRUE AND p.name LIKE ?
       HAVING distance_km <= ?
-      ORDER BY distance_km ASC
-    `;
-
-    const [rows] = await db.query(query, [lat, lng, lat, `%${q}%`, searchRadius]);
+      ORDER BY distance_km ASC, p.name ASC
+      LIMIT 100`,
+      [latitude, longitude, latitude, `%${queryText}%`, searchRadius]
+    );
     return res.json({ results: rows });
   } catch (err) {
-    console.error("Search products error:", err);
-    return res.status(500).json({ message: "Something went wrong." });
+    return respondWithError(res, err, "Something went wrong.", "Search products error:");
   }
 }
 

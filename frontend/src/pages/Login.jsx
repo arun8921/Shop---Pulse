@@ -27,29 +27,63 @@ export default function Login() {
   }
 
   return (
-    <div className="center-screen">
-      <div className="card auth-card">
-        <h1 style={{ marginBottom: 4 }}>Welcome back</h1>
-        <p className="muted" style={{ marginBottom: 20 }}>Log in to Shop-Pulse</p>
+    <div className="min-h-screen flex items-center justify-center p-5">
+      <div className="w-full max-w-[380px] bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-6">
+        <h1 className="font-display font-semibold text-ink text-[28px] leading-tight tracking-[-0.01em] mb-1">
+          Welcome back
+        </h1>
+        <p className="text-ink-soft text-[13.5px] mb-5">Log in to Shop-Pulse</p>
 
-        {error && <div className="error-banner">{error}</div>}
+        {error && (
+          <div className="bg-coral-soft text-coral rounded-md px-3.5 py-2.5 text-[13.5px] mb-4">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
-          <div className="field">
-            <label htmlFor="email">Email</label>
-            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
+          <div className="mb-4">
+            <label htmlFor="email" className="block text-[13px] font-medium text-ink-soft mb-1.5">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoFocus
+              className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+            />
           </div>
-          <div className="field">
-            <label htmlFor="password">Password</label>
-            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+
+          <div className="mb-4">
+            <label htmlFor="password" className="block text-[13px] font-medium text-ink-soft mb-1.5">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+            />
           </div>
-          <button className="btn btn-primary" type="submit" disabled={submitting}>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm cursor-pointer transition hover:opacity-90 active:scale-[0.98] disabled:opacity-55 disabled:cursor-not-allowed"
+          >
             {submitting ? "Logging in..." : "Log in"}
           </button>
         </form>
 
-        <p className="muted" style={{ marginTop: 16, textAlign: "center" }}>
-          Don't have an account? <Link to="/register">Sign up</Link>
+        <p className="text-ink-soft text-[13.5px] mt-4 text-center">
+          Don't have an account?{" "}
+          <Link to="/register" className="text-slate font-medium hover:underline">
+            Sign up
+          </Link>
         </p>
       </div>
     </div>

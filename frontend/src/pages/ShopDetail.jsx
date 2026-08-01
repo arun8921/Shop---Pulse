@@ -13,6 +13,7 @@ export default function ShopDetail() {
   const [orderingProductId, setOrderingProductId] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [address, setAddress] = useState("");
+  const [locatingAddress, setLocatingAddress] = useState(false);
   const [orderMessage, setOrderMessage] = useState("");
   const [orderError, setOrderError] = useState("");
 
@@ -62,6 +63,38 @@ export default function ShopDetail() {
       setOrderError(err.response?.data?.message || "Could not place the order.");
     }
   }
+  // Grabs the browser's GPS position and reverse-geocodes it into a readable
+// address via OpenStreetMap's Nominatim service, so the customer doesn't
+// have to type their address by hand.
+async function useMyLocationForDelivery() {
+  if (!navigator.geolocation) {
+    setOrderError("Your browser doesn't support location access — please type your address instead.");
+    return;
+  }
+  setOrderError("");
+  setLocatingAddress(true);
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const { latitude, longitude } = pos.coords;
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+        );
+        const data = await res.json();
+        setAddress(data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+      } catch (err) {
+        setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+      } finally {
+        setLocatingAddress(false);
+      }
+    },
+    () => {
+      setOrderError("Couldn't access your location. Please type your address instead.");
+      setLocatingAddress(false);
+    }
+  );
+}
 
   async function handleSubmitReview(e) {
     e.preventDefault();
@@ -122,10 +155,26 @@ export default function ShopDetail() {
                   <label>Quantity</label>
                   <input type="number" min={1} value={quantity} onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))} />
                 </div>
-                <div className="field" style={{ marginTop: 8 }}>
-                  <label>Delivery address</label>
-                  <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Where should this go?" />
-                </div>
+               <div className="field" style={{ marginTop: 8 }}>
+  <label>Delivery address</label>
+  <div style={{ display: "flex", gap: 8 }}>
+    <input
+      value={address}
+      onChange={(e) => setAddress(e.target.value)}
+      placeholder="Where should this go?"
+      style={{ flex: 1 }}
+    />
+    <button
+      type="button"
+      className="btn btn-outline btn-sm"
+      style={{ whiteSpace: "nowrap" }}
+      onClick={useMyLocationForDelivery}
+      disabled={locatingAddress}
+    >
+      {locatingAddress ? "Locating..." : "Use my location"}
+    </button>
+  </div>
+</div>
                 <button className="btn btn-pulse btn-sm" onClick={() => handlePlaceOrder(product.product_id)}>
                   Confirm order
                 </button>

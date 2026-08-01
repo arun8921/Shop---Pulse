@@ -1,6 +1,8 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000/api";
+// Keep local development simple while allowing a deployed frontend to point at
+// its own API without a source-code change.
+const API_BASE_URL = (process.env.REACT_APP_API_URL || "http://localhost:5000/api").replace(/\/$/, "");
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

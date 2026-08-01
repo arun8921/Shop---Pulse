@@ -1,0 +1,16 @@
+# Dependencies and generated bundles
+node_modules/
+build/
+dist/
+.cache/
+coverage/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Logs and editor files
+*.log
+.DS_Store
+.vscode/

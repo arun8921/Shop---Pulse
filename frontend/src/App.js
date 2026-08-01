@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import PrivateRoute from "./components/PrivateRoute";
@@ -10,6 +10,7 @@ import Register from "./pages/Register";
 import CustomerHome from "./pages/CustomerHome";
 import ShopDetail from "./pages/ShopDetail";
 import MyOrders from "./pages/MyOrders";
+import CustomerDashboard from "./pages/CustomerDashboard";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
@@ -20,6 +21,15 @@ function Home() {
   const { user, loading } = useAuth();
   if (loading) return null;
   return user ? <CustomerHome /> : <Landing />;
+}
+
+function RoleDashboard() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (user?.role === "owner") return <OwnerDashboard />;
+  if (user?.role === "admin") return <AdminPanel />;
+  if (user?.role === "customer") return <CustomerDashboard />;
+  return <Navigate to="/" replace />;
 }
 
 export default function App() {
@@ -42,8 +52,9 @@ export default function App() {
             />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/dashboard" element={<PrivateRoute><RoleDashboard /></PrivateRoute>} />
             <Route
-              path="/dashboard"
+              path="/owner/dashboard"
               element={
                 <PrivateRoute allowedRoles={["owner"]}>
                   <OwnerDashboard />

@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Compass, LayoutDashboard, LogOut, PackageSearch, ShieldCheck } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
@@ -23,32 +24,36 @@ export default function Navbar() {
           {!user && (
             <>
               <Link to="/login">Log in</Link>
-              <Link to="/register">Sign up</Link>
+              <Link className="nav-cta" to="/register">Sign up</Link>
             </>
           )}
 
           {user && user.role === "owner" && (
             <>
-              <span className="pill">Owner</span>
-              <Link to="/dashboard">Dashboard</Link>
-              <button className="linklike" onClick={handleLogout}>Log out</button>
+              <Link className="nav-icon-link" to="/dashboard"><LayoutDashboard size={16} /> <span>Dashboard</span></Link>
+              <span className="pill owner">Owner</span>
+              <span className="nav-user-name">{user.name}</span>
+              <button className="linklike nav-icon-link" onClick={handleLogout}><LogOut size={16} /> <span>Log out</span></button>
             </>
           )}
 
           {user && user.role === "customer" && (
             <>
-              <span className="pill">Customer</span>
-              <Link to="/my-orders">My orders</Link>
-              <span className="muted">{user.name}</span>
-              <button className="linklike" onClick={handleLogout}>Log out</button>
+              <Link className="nav-icon-link" to="/discover"><Compass size={16} /> <span>Discover</span></Link>
+              <Link className="nav-icon-link" to="/my-orders"><PackageSearch size={16} /> <span>Orders</span></Link>
+              <Link className="nav-icon-link" to="/dashboard"><LayoutDashboard size={16} /> <span>Dashboard</span></Link>
+              <span className="pill customer">Customer</span>
+              <span className="nav-user-name">{user.name}</span>
+              <button className="linklike nav-icon-link" onClick={handleLogout}><LogOut size={16} /> <span>Log out</span></button>
             </>
           )}
 
           {user && user.role === "admin" && (
             <>
-              <span className="pill">Admin</span>
-              <span className="muted">{user.name}</span>
-              <button className="linklike" onClick={handleLogout}>Log out</button>
+              <Link className="nav-icon-link" to="/dashboard"><ShieldCheck size={16} /> <span>Admin panel</span></Link>
+              <span className="pill admin">Admin</span>
+              <span className="nav-user-name">{user.name}</span>
+              <button className="linklike nav-icon-link" onClick={handleLogout}><LogOut size={16} /> <span>Log out</span></button>
             </>
           )}
         </div>
