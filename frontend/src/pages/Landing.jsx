@@ -19,55 +19,16 @@ const closedIcon = new L.Icon({
 });
 
 const FEATURES = [
-  {
-    icon: MapPin,
-    title: "GPS Discovery",
-    description: "Find shops near you within a chosen radius, instantly, using your live location.",
-  },
-  {
-    icon: ShoppingBag,
-    title: "Live Availability",
-    description: "See real open/closed status and product stock — available, few left, or out of stock.",
-  },
-  {
-    icon: Bell,
-    title: "Order Tracking",
-    description: "Place an order and follow it through placed, confirmed, out for delivery, and delivered.",
-  },
-  {
-    icon: Star,
-    title: "Reviews & Trust",
-    description: "Read and leave reviews so good shops get discovered and stay accountable.",
-  },
+  { icon: MapPin, title: "GPS Discovery", description: "Find shops near you within a chosen radius, instantly, using your live location." },
+  { icon: ShoppingBag, title: "Live Availability", description: "See real open/closed status and product stock — available, few left, or out of stock." },
+  { icon: Bell, title: "Order Tracking", description: "Place an order and follow it through placed, confirmed, out for delivery, and delivered." },
+  { icon: Star, title: "Reviews & Trust", description: "Read and leave reviews so good shops get discovered and stay accountable." },
 ];
 
 const AUDIENCES = [
-  {
-    title: "For Customers",
-    items: [
-      "Find open shops near you instantly",
-      "Check product availability and prices",
-      "Place orders and track delivery status",
-      "Read and write shop reviews",
-    ],
-  },
-  {
-    title: "For Shop Owners",
-    items: [
-      "Register your shop with a location on the map",
-      "Toggle live open/closed status anytime",
-      "Manage products and stock in one dashboard",
-      "Confirm and fulfil incoming orders",
-    ],
-  },
-  {
-    title: "For Admins",
-    items: [
-      "Verify new shop registrations",
-      "Bulk-upload a shop's product catalog via CSV",
-      "Keep the shop directory accurate and trustworthy",
-    ],
-  },
+  { title: "For Customers", items: ["Find open shops near you instantly", "Check product availability and prices", "Place orders and track delivery status", "Read and write shop reviews"] },
+  { title: "For Shop Owners", items: ["Register your shop with a location on the map", "Toggle live open/closed status anytime", "Manage products and stock in one dashboard", "Confirm and fulfil incoming orders"] },
+  { title: "For Admins", items: ["Verify new shop registrations", "Bulk-upload a shop's product catalog via CSV", "Keep the shop directory accurate and trustworthy"] },
 ];
 
 function HeroMap() {
@@ -96,15 +57,15 @@ function HeroMap() {
 
   if (!coords) {
     return (
-      <div className="hero-visual">
-        <MapPin size={40} strokeWidth={1.5} color="var(--color-slate)" />
-        <p className="muted mono" style={{ marginTop: 12 }}>Locating you...</p>
+      <div className="relative bg-slate-soft rounded-2xl h-[280px] flex flex-col items-center justify-center text-center overflow-hidden">
+        <MapPin size={40} strokeWidth={1.5} color="#2A4B7C" />
+        <p className="font-mono text-ink-soft text-[13.5px] mt-3">Locating you...</p>
       </div>
     );
   }
 
   return (
-    <div className="hero-visual hero-map">
+    <div className="relative bg-slate-soft rounded-2xl h-[280px] overflow-hidden [&_.leaflet-container]:rounded-2xl">
       <MapContainer center={[coords.lat, coords.lng]} zoom={13} style={{ height: "100%", width: "100%" }} scrollWheelZoom={false}>
         <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         {shops.map(
@@ -126,8 +87,8 @@ function HeroMap() {
         )}
       </MapContainer>
       {shops.length === 0 && (
-        <div className="hero-map-empty-note">
-          <span className="mono">No registered shops near you yet — be the first!</span>
+        <div className="absolute bottom-3 left-3 right-3 bg-white/95 rounded-md px-3 py-2 text-xs text-ink-soft text-left z-[1000] pointer-events-none">
+          No registered shops near you yet — be the first!
         </div>
       )}
     </div>
@@ -137,21 +98,30 @@ function HeroMap() {
 export default function Landing() {
   return (
     <div>
-      {/* Hero */}
-      <div className="container">
-        <div className="hero-grid">
+      <div className="max-w-[1100px] mx-auto px-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[50px] items-center py-9 md:py-[60px]">
           <div>
-            <h1 className="hero-title">Discover nearby shops, live.</h1>
-            <p className="muted" style={{ fontSize: 16, marginTop: 14, marginBottom: 26, maxWidth: 440 }}>
+            <h1 className="font-display font-semibold text-ink text-[32px] md:text-[42px] leading-[1.1]">
+              Discover nearby shops, live.
+            </h1>
+            <p className="text-ink-soft text-base mt-3.5 mb-6 max-w-[440px]">
               Shop-Pulse connects you with local shops in real time — check who's open,
               what's in stock, and order in a few taps. Built for independent shops,
               not warehouses.
             </p>
-            <div style={{ display: "flex", gap: 12 }}>
-              <Link to="/register" className="btn btn-primary" style={{ width: "auto" }}>
+            <div className="flex gap-3">
+              <Link
+                to="/register"
+                className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm hover:opacity-90 transition"
+              >
                 Get started
               </Link>
-              <a href="#features" className="btn btn-outline">Learn more</a>
+              <a
+                href="#features"
+                className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md border border-border bg-transparent text-ink font-semibold text-sm hover:border-ink-soft transition"
+              >
+                Learn more
+              </a>
             </div>
           </div>
 
@@ -159,37 +129,35 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* Features */}
-      <div className="container" id="features" style={{ marginTop: 70 }}>
-        <h2 className="section-heading">Built around one simple idea</h2>
-        <p className="muted" style={{ marginBottom: 30 }}>
+      <div className="max-w-[1100px] mx-auto px-5 mt-[70px]" id="features">
+        <h2 className="font-display font-semibold text-ink text-2xl mb-1.5">Built around one simple idea</h2>
+        <p className="text-ink-soft text-[13.5px] mb-7">
           Know before you go — is it open, is it in stock, and how far is it.
         </p>
-        <div className="feature-grid">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {FEATURES.map(({ icon: Icon, title, description }) => (
-            <div key={title} className="card feature-card">
-              <Icon size={26} strokeWidth={1.6} color="var(--color-slate)" />
-              <h3 style={{ fontSize: 16, marginTop: 14, marginBottom: 6 }}>{title}</h3>
-              <p className="muted" style={{ fontSize: 13.5 }}>{description}</p>
+            <div key={title} className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-[22px]">
+              <Icon size={26} strokeWidth={1.6} color="#2A4B7C" />
+              <h3 className="text-base text-ink mt-3.5 mb-1.5">{title}</h3>
+              <p className="text-ink-soft text-[13.5px]">{description}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Audiences */}
-      <div className="container" style={{ marginTop: 70 }}>
-        <h2 className="section-heading">Built for everyone in the loop</h2>
-        <p className="muted" style={{ marginBottom: 30 }}>
+      <div className="max-w-[1100px] mx-auto px-5 mt-[70px]">
+        <h2 className="font-display font-semibold text-ink text-2xl mb-1.5">Built for everyone in the loop</h2>
+        <p className="text-ink-soft text-[13.5px] mb-7">
           Customers, shop owners, and admins each get exactly what they need.
         </p>
-        <div className="audience-grid">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {AUDIENCES.map((a) => (
-            <div key={a.title} className="card">
-              <h3 style={{ fontSize: 16, marginBottom: 14 }}>{a.title}</h3>
-              <ul className="checklist">
+            <div key={a.title} className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-6">
+              <h3 className="text-base text-ink mb-3.5">{a.title}</h3>
+              <ul className="list-none p-0 m-0">
                 {a.items.map((item) => (
-                  <li key={item}>
-                    <CheckCircle2 size={16} strokeWidth={1.8} color="var(--color-pulse)" />
+                  <li key={item} className="flex items-start gap-2.5 text-[13.5px] text-ink mb-2.5">
+                    <CheckCircle2 size={16} strokeWidth={1.8} color="#16A34A" className="flex-shrink-0 mt-px" />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -199,19 +167,21 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* CTA */}
-      <div className="cta-banner" style={{ marginTop: 70 }}>
-        <h2 style={{ color: "white", fontSize: 26 }}>Ready to find what's open?</h2>
-        <p style={{ color: "rgba(255,255,255,0.85)", marginTop: 8, marginBottom: 22 }}>
+      <div className="bg-slate py-14 px-5 text-center mt-[70px]">
+        <h2 className="text-white text-[26px] font-display font-semibold">Ready to find what's open?</h2>
+        <p className="text-white/85 mt-2 mb-[22px]">
           Join Shop-Pulse and discover the shops around you today.
         </p>
-        <Link to="/register" className="btn" style={{ width: "auto", background: "white", color: "var(--color-slate)" }}>
+        <Link
+          to="/register"
+          className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-white text-slate font-semibold text-sm hover:opacity-90 transition"
+        >
           Sign up now
         </Link>
       </div>
 
-      <div className="landing-footer">
-        <p className="muted mono" style={{ fontSize: 12 }}>© 2026 Shop-Pulse. A mini project.</p>
+      <div className="text-center py-6 px-5">
+        <p className="font-mono text-ink-soft text-xs">© 2026 Shop-Pulse. A mini project.</p>
       </div>
     </div>
   );

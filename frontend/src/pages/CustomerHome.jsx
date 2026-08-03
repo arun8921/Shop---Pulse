@@ -24,6 +24,14 @@ const searchCenterIcon = new L.Icon({
   className: "search-center-marker",
 });
 
+const BADGE_STYLES = {
+  available: "bg-pulse-soft text-pulse",
+  out_of_stock: "bg-coral-soft text-coral",
+  few_left: "bg-amber-soft text-amber",
+};
+const STATUS_TEXT = { open: "text-pulse", closed: "text-coral" };
+const STATUS_DOT = { open: "bg-pulse animate-pulse-beat", closed: "bg-coral" };
+
 function RecenterMap({ lat, lng }) {
   const map = useMap();
   useEffect(() => {
@@ -162,103 +170,143 @@ export default function CustomerHome() {
   }
 
   return (
-    <div className="container">
-      <h1 style={{ marginTop: 28 }}>Find what's open nearby</h1>
-      <p className="muted">Live status and stock from shops around you.</p>
+    <div className="max-w-[1100px] mx-auto px-5">
+      <h1 className="font-display font-semibold text-ink text-2xl mt-7">Find what's open nearby</h1>
+      <p className="text-ink-soft text-[13.5px]">Live status and stock from shops around you.</p>
 
       {locationDenied && (
-        <div className="error-banner" style={{ marginTop: 16 }}>
+        <div className="bg-coral-soft text-coral rounded-md px-3.5 py-2.5 text-[13.5px] mt-4">
           Couldn't access your location, showing a default area instead. Enable location access for accurate results.
         </div>
       )}
 
       {isManualLocation && (
-        <div className="success-banner" style={{ marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div className="bg-pulse-soft text-pulse rounded-md px-3.5 py-2.5 text-[13.5px] mt-4 flex justify-between items-center gap-3">
           <span>Searching around a spot you picked on the map.</span>
-          <button className="btn btn-outline btn-sm" onClick={resetToMyLocation}>Use my location instead</button>
+          <button
+            onClick={resetToMyLocation}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition whitespace-nowrap"
+          >
+            Use my location instead
+          </button>
         </div>
       )}
 
-      <form onSubmit={handleProductSearch} className="search-bar">
-        <div className="field">
-          <label htmlFor="q">Search for a product</label>
-          <input id="q" placeholder="e.g. rice, paracetamol, notebooks" value={query} onChange={(e) => setQuery(e.target.value)} />
+      <form onSubmit={handleProductSearch} className="flex gap-2.5 flex-wrap items-end my-6">
+        <div className="flex-1 min-w-[160px]">
+          <label htmlFor="q" className="block text-[13px] font-medium text-ink-soft mb-1.5">
+            Search for a product
+          </label>
+          <input
+            id="q"
+            placeholder="e.g. rice, paracetamol, notebooks"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+          />
         </div>
-        <div className="field" style={{ flex: "0 0 140px" }}>
-          <label htmlFor="radius">Radius</label>
-          <select id="radius" value={radius} onChange={(e) => setRadius(Number(e.target.value))}>
+        <div className="flex-none w-[140px]">
+          <label htmlFor="radius" className="block text-[13px] font-medium text-ink-soft mb-1.5">
+            Radius
+          </label>
+          <select
+            id="radius"
+            value={radius}
+            onChange={(e) => setRadius(Number(e.target.value))}
+            className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+          >
             <option value={1}>1 km</option>
             <option value={3}>3 km</option>
             <option value={5}>5 km</option>
           </select>
         </div>
-        <button className="btn btn-primary" type="submit" style={{ width: "auto" }}>Search</button>
+        <button
+          type="submit"
+          className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm cursor-pointer hover:opacity-90 transition"
+        >
+          Search
+        </button>
         {query && (
-          <button type="button" className="btn btn-outline" onClick={clearSearch}>Clear</button>
+          <button
+            type="button"
+            onClick={clearSearch}
+            className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md border border-border bg-transparent text-ink font-semibold text-sm cursor-pointer hover:border-ink-soft transition"
+          >
+            Clear
+          </button>
         )}
       </form>
 
-      {error && <div className="error-banner">{error}</div>}
+      {error && <div className="bg-coral-soft text-coral rounded-md px-3.5 py-2.5 text-[13.5px] mb-4">{error}</div>}
 
-      <div className="home-grid">
-        <div className="shop-list">
-          {loading && <p className="muted">Loading shops...</p>}
+      <div className="grid grid-cols-1 min-[861px]:grid-cols-[380px_1fr] gap-5 items-start">
+        <div className="flex flex-col gap-3 max-h-[620px] overflow-y-auto pr-1">
+          {loading && <p className="text-ink-soft text-[13.5px]">Loading shops...</p>}
           {!loading && shops.length === 0 && (
-            <div className="card empty-state">No shops found in this radius yet. Try a wider radius.</div>
+            <div className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] text-center py-10 px-5 text-ink-soft">
+              No shops found in this radius yet. Try a wider radius.
+            </div>
           )}
           {shops.map((shop) => (
-            <div key={shop.shop_id} className="card shop-card">
-              <div className="shop-card-top">
+            <div key={shop.shop_id} className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-4">
+              <div className="flex justify-between items-start gap-2">
                 <div>
-                  <div className="shop-name">{shop.name}</div>
-                  <div className="muted">{shop.address}</div>
+                  <div className="font-display font-semibold text-ink text-base">{shop.name}</div>
+                  <div className="text-ink-soft text-[13.5px]">{shop.address}</div>
                 </div>
-                <div className={`status-row ${shop.current_status}`}>
-                  <span className={`status-dot ${shop.current_status}`}></span>
+                <div className={`inline-flex items-center gap-[7px] font-mono text-[12.5px] whitespace-nowrap ${STATUS_TEXT[shop.current_status]}`}>
+                  <span className={`inline-block w-[9px] h-[9px] rounded-full ${STATUS_DOT[shop.current_status]}`}></span>
                   {shop.current_status === "open" ? "Open now" : "Closed"}
                 </div>
               </div>
 
               {shop.distance_km !== undefined && (
-                <p className="mono muted" style={{ marginTop: 8, marginBottom: 8 }}>
+                <p className="font-mono text-ink-soft text-[13.5px] mt-2 mb-2">
                   {Number(shop.distance_km).toFixed(2)} km away
                 </p>
               )}
 
               {shop.matched_product && (
-                <div className="product-row" style={{ marginTop: 8 }}>
+                <div className="flex justify-between items-center py-2.5 mt-2 text-sm border-t border-border">
                   <span>{shop.matched_product.name}</span>
-                  <span>
-                    <span className="price">₹{shop.matched_product.price}</span>{" "}
-                    <span className={`badge ${shop.matched_product.availability_status}`}>
+                  <span className="flex items-center gap-2">
+                    <span className="font-mono font-medium">₹{shop.matched_product.price}</span>
+                    <span
+                      className={`inline-block font-mono text-[11px] px-[9px] py-[3px] rounded-full uppercase tracking-wide ${
+                        BADGE_STYLES[shop.matched_product.availability_status]
+                      }`}
+                    >
                       {shop.matched_product.availability_status.replace("_", " ")}
                     </span>
                   </span>
                 </div>
               )}
 
-              <button className="btn btn-outline btn-sm" style={{ marginTop: 12 }} onClick={() => navigate(`/shops/${shop.shop_id}`)}>
+              <button
+                onClick={() => navigate(`/shops/${shop.shop_id}`)}
+                className="mt-3 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition"
+              >
                 View shop
               </button>
             </div>
           ))}
         </div>
 
-        <div className="map-wrap" style={{ position: "relative" }}>
-          <span className="map-picker-hint" style={{ zIndex: 1000 }}>Click the map to search a different area</span>
+        <div className="relative rounded-2xl overflow-hidden border border-border h-[620px] [&_.leaflet-container]:rounded-2xl">
+          <span className="absolute top-2 left-2 z-[1000] bg-white/95 px-2.5 py-1 rounded-full text-xs text-ink-soft shadow-[0_1px_2px_rgba(28,28,30,0.06)]">
+            Click the map to search a different area
+          </span>
           {coords && (
             <MapContainer center={[coords.lat, coords.lng]} zoom={14} style={{ height: "100%", width: "100%" }}>
               <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               <RecenterMap lat={coords.lat} lng={coords.lng} />
               <ClickToSearchHandler onPick={handleMapClick} />
-              {coords && (
-                <Marker position={[coords.lat, coords.lng]} icon={searchCenterIcon}>
-                  <Tooltip permanent direction="top" offset={[0, -30]} className="you-are-here-tooltip">
-                    {isManualLocation ? "Searching from here" : "You are here"}
-                  </Tooltip>
-                  <Popup>{isManualLocation ? "Searching from here" : "You are here"}</Popup>
-                </Marker>
-              )}
+              <Marker position={[coords.lat, coords.lng]} icon={searchCenterIcon}>
+                <Tooltip permanent direction="top" offset={[0, -30]} className="you-are-here-tooltip">
+                  {isManualLocation ? "Searching from here" : "You are here"}
+                </Tooltip>
+                <Popup>{isManualLocation ? "Searching from here" : "You are here"}</Popup>
+              </Marker>
               {shops.map(
                 (shop) =>
                   shop.latitude &&

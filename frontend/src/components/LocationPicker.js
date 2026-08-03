@@ -29,11 +29,8 @@ function RecenterOnChange({ lat, lng }) {
   return null;
 }
 
-// A small inline map: click anywhere to drop/move the pin, which fills in
-// latitude/longitude for the shop registration form. Falls back to a
-// reasonable default center until the browser's geolocation resolves.
 export default function LocationPicker({ latitude, longitude, onChange }) {
-  const [center] = useState({ lat: 9.9312, lng: 76.2673 }); // default: Kochi
+  const [center] = useState({ lat: 9.9312, lng: 76.2673 });
   const hasPin = latitude && longitude;
 
   function handlePick(lat, lng) {
@@ -49,8 +46,10 @@ export default function LocationPicker({ latitude, longitude, onChange }) {
 
   return (
     <div>
-      <div className="map-picker-wrap">
-        <span className="map-picker-hint">Click on the map to set your shop's location</span>
+      <div className="relative rounded-lg overflow-hidden border border-border h-[260px] mb-4 [&_.leaflet-container]:rounded-lg">
+        <span className="absolute top-2 left-2 z-[1000] bg-white/95 px-2.5 py-1 rounded-full text-xs text-ink-soft shadow-[0_1px_2px_rgba(28,28,30,0.06)]">
+          Click on the map to set your shop's location
+        </span>
         <MapContainer center={initialCenter} zoom={hasPin ? 15 : 12} style={{ height: "100%", width: "100%" }}>
           <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           <ClickHandler onPick={handlePick} />
@@ -68,7 +67,7 @@ export default function LocationPicker({ latitude, longitude, onChange }) {
         </MapContainer>
       </div>
       {hasPin && (
-        <p className="muted mono" style={{ marginTop: -8, marginBottom: 16 }}>
+        <p className="font-mono text-ink-soft text-[13.5px] -mt-2 mb-4">
           Pinned at {parseFloat(latitude).toFixed(5)}, {parseFloat(longitude).toFixed(5)} — drag the marker to fine-tune
         </p>
       )}
