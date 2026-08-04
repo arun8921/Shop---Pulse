@@ -10,6 +10,9 @@ const ORDER_NEXT_STEPS = {
   cancelled: [],
 };
 
+const STATUS_TEXT = { open: "text-pulse", closed: "text-coral" };
+const STATUS_DOT = { open: "bg-pulse animate-pulse-beat", closed: "bg-coral" };
+
 export default function OwnerDashboard() {
   const [shops, setShops] = useState([]);
   const [activeShopId, setActiveShopId] = useState(null);
@@ -64,8 +67,6 @@ export default function OwnerDashboard() {
     loadShopData();
   }, [loadShopData]);
 
-  // Keep incoming orders reasonably fresh without requiring a manual action —
-  // matches the same 25s polling pattern used elsewhere in the app.
   useEffect(() => {
     if (!activeShopId) return;
     const interval = setInterval(loadShopData, 25000);
@@ -187,17 +188,30 @@ export default function OwnerDashboard() {
     }
   }
 
-  if (loading) return <div className="container"><p className="muted" style={{ marginTop: 28 }}>Loading dashboard...</p></div>;
+  if (loading) {
+    return (
+      <div className="max-w-[1100px] mx-auto px-5">
+        <p className="text-ink-soft text-[13.5px] mt-7">Loading dashboard...</p>
+      </div>
+    );
+  }
 
   if (shops.length === 0 && !showNewShopForm) {
     return (
-      <div className="container">
-        {error && <div className="error-banner" style={{ marginTop: 28 }}>{error}</div>}
-        <div className="center-screen" style={{ minHeight: "60vh" }}>
-          <div className="card auth-card" style={{ textAlign: "center" }}>
-            <h2>No shops yet</h2>
-            <p className="muted" style={{ margin: "10px 0 18px" }}>Register your first shop to get started.</p>
-            <button className="btn btn-primary" onClick={() => setShowNewShopForm(true)}>Register a shop</button>
+      <div className="max-w-[1100px] mx-auto px-5">
+        {error && (
+          <div className="bg-coral-soft text-coral rounded-md px-3.5 py-2.5 text-[13.5px] mt-7">{error}</div>
+        )}
+        <div className="min-h-[60vh] flex items-center justify-center p-5">
+          <div className="w-full max-w-[380px] bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-6 text-center">
+            <h2 className="font-display font-semibold text-ink text-xl">No shops yet</h2>
+            <p className="text-ink-soft text-[13.5px] my-2.5 mb-[18px]">Register your first shop to get started.</p>
+            <button
+              onClick={() => setShowNewShopForm(true)}
+              className="w-full inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm cursor-pointer hover:opacity-90 transition"
+            >
+              Register a shop
+            </button>
           </div>
         </div>
       </div>
@@ -205,57 +219,83 @@ export default function OwnerDashboard() {
   }
 
   return (
-    <div className="container" style={{ paddingBottom: 60 }}>
-      <div className="dash-header" style={{ marginTop: 28 }}>
+    <div className="max-w-[1100px] mx-auto px-5 pb-[60px]">
+      <div className="flex justify-between items-center flex-wrap gap-3 mt-7 mb-5">
         <div>
-          <h1>Owner Dashboard</h1>
+          <h1 className="font-display font-semibold text-ink text-2xl">Owner Dashboard</h1>
           {shops.length > 1 && (
             <select
               value={activeShopId || ""}
               onChange={(e) => setActiveShopId(Number(e.target.value))}
-              style={{ marginTop: 8, padding: "6px 10px", borderRadius: 6, border: "1px solid var(--color-border)" }}
+              className="mt-2 px-2.5 py-1.5 rounded-md border border-border bg-bg text-ink"
             >
               {shops.map((s) => (
-                <option key={s.shop_id} value={s.shop_id}>{s.name}</option>
+                <option key={s.shop_id} value={s.shop_id}>
+                  {s.name}
+                </option>
               ))}
             </select>
           )}
         </div>
-        <button className="btn btn-outline btn-sm" onClick={() => setShowNewShopForm((v) => !v)}>
+        <button
+          onClick={() => setShowNewShopForm((v) => !v)}
+          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition"
+        >
           {showNewShopForm ? "Cancel" : shops.length === 0 ? "+ Add a shop" : "+ Add another shop"}
         </button>
       </div>
 
-      {message && <div className="success-banner">{message}</div>}
-      {error && <div className="error-banner">{error}</div>}
+      {message && (
+        <div className="bg-pulse-soft text-pulse rounded-md px-3.5 py-2.5 text-[13.5px] mb-4">{message}</div>
+      )}
+      {error && <div className="bg-coral-soft text-coral rounded-md px-3.5 py-2.5 text-[13.5px] mb-4">{error}</div>}
 
       {showNewShopForm && (
-        <div className="card" style={{ marginBottom: 24 }}>
-          <h3 style={{ marginBottom: 14 }}>Register a new shop</h3>
+        <div className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-6 mb-6">
+          <h3 className="font-display font-semibold text-ink text-base mb-3.5">Register a new shop</h3>
           <form onSubmit={handleCreateShop}>
-            <div className="field">
-              <label>Shop name</label>
-              <input value={shopForm.name} onChange={(e) => setShopForm({ ...shopForm, name: e.target.value })} required />
+            <div className="mb-4">
+              <label className="block text-[13px] font-medium text-ink-soft mb-1.5">Shop name</label>
+              <input
+                value={shopForm.name}
+                onChange={(e) => setShopForm({ ...shopForm, name: e.target.value })}
+                required
+                className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+              />
             </div>
-            <div className="field">
-              <label>Address</label>
-              <input value={shopForm.address} onChange={(e) => setShopForm({ ...shopForm, address: e.target.value })} />
+            <div className="mb-4">
+              <label className="block text-[13px] font-medium text-ink-soft mb-1.5">Address</label>
+              <input
+                value={shopForm.address}
+                onChange={(e) => setShopForm({ ...shopForm, address: e.target.value })}
+                className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+              />
             </div>
 
-            <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--color-ink-soft)", marginBottom: 6 }}>
-              Shop location
-            </label>
+            <label className="block text-[13px] font-medium text-ink-soft mb-1.5">Shop location</label>
             <LocationPicker latitude={shopForm.latitude} longitude={shopForm.longitude} onChange={handleLocationChange} />
 
-            <button type="button" className="btn btn-outline btn-sm" onClick={useMyLocation} style={{ marginBottom: 16 }}>
+            <button
+              type="button"
+              onClick={useMyLocation}
+              className="mb-4 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition"
+            >
               Use my current location instead
             </button>
 
-            <div className="field">
-              <label>Contact number</label>
-              <input value={shopForm.contact_number} onChange={(e) => setShopForm({ ...shopForm, contact_number: e.target.value })} />
+            <div className="mb-4">
+              <label className="block text-[13px] font-medium text-ink-soft mb-1.5">Contact number</label>
+              <input
+                value={shopForm.contact_number}
+                onChange={(e) => setShopForm({ ...shopForm, contact_number: e.target.value })}
+                className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+              />
             </div>
-            <button className="btn btn-primary" type="submit" disabled={submittingShop}>
+            <button
+              type="submit"
+              disabled={submittingShop}
+              className="w-full inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm cursor-pointer hover:opacity-90 disabled:opacity-55 disabled:cursor-not-allowed transition"
+            >
               {submittingShop ? "Registering..." : "Register shop"}
             </button>
           </form>
@@ -264,69 +304,106 @@ export default function OwnerDashboard() {
 
       {activeShop && (
         <>
-          <div className="card toggle-row" style={{ marginBottom: 24 }}>
-            <span className={`status-row ${activeShop.current_status}`}>
-              <span className={`status-dot ${activeShop.current_status}`}></span>
+          <div className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-6 flex items-center gap-3 flex-wrap mb-6">
+            <span className={`inline-flex items-center gap-[7px] font-mono text-[12.5px] ${STATUS_TEXT[activeShop.current_status]}`}>
+              <span className={`inline-block w-[9px] h-[9px] rounded-full ${STATUS_DOT[activeShop.current_status]}`}></span>
               {activeShop.current_status === "open" ? "Currently open" : "Currently closed"}
             </span>
             <button
-              className={activeShop.current_status === "open" ? "btn btn-coral btn-sm" : "btn btn-pulse btn-sm"}
               onClick={toggleStatus}
+              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-white font-semibold text-[13px] cursor-pointer hover:opacity-90 transition ${
+                activeShop.current_status === "open" ? "bg-coral" : "bg-pulse"
+              }`}
             >
               Mark as {activeShop.current_status === "open" ? "closed" : "open"}
             </button>
           </div>
 
-          <h2 className="section-title" style={{ marginTop: 0 }}>Products</h2>
-          <div className="card" style={{ marginBottom: 12 }}>
-            <form onSubmit={handleAddProduct} style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "end" }}>
-              <div className="field" style={{ flex: 1, minWidth: 140, marginBottom: 0 }}>
-                <label>Product name</label>
-                <input value={productForm.name} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} required />
+          <h2 className="font-display font-semibold text-ink text-[15px] mb-3">Products</h2>
+          <div className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-6 mb-3">
+            <form onSubmit={handleAddProduct} className="flex gap-2.5 flex-wrap items-end">
+              <div className="flex-1 min-w-[140px]">
+                <label className="block text-[13px] font-medium text-ink-soft mb-1.5">Product name</label>
+                <input
+                  value={productForm.name}
+                  onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                  required
+                  className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+                />
               </div>
-              <div className="field" style={{ width: 110, marginBottom: 0 }}>
-                <label>Price (₹)</label>
-                <input type="number" step="0.01" min="0" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: e.target.value })} required />
+              <div className="w-[110px]">
+                <label className="block text-[13px] font-medium text-ink-soft mb-1.5">Price (₹)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={productForm.price}
+                  onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                  required
+                  className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+                />
               </div>
-              <div className="field" style={{ width: 150, marginBottom: 0 }}>
-                <label>Status</label>
-                <select value={productForm.availability_status} onChange={(e) => setProductForm({ ...productForm, availability_status: e.target.value })}>
+              <div className="w-[150px]">
+                <label className="block text-[13px] font-medium text-ink-soft mb-1.5">Status</label>
+                <select
+                  value={productForm.availability_status}
+                  onChange={(e) => setProductForm({ ...productForm, availability_status: e.target.value })}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+                >
                   <option value="available">Available</option>
                   <option value="few_left">Few left</option>
                   <option value="out_of_stock">Out of stock</option>
                 </select>
               </div>
-              <button className="btn btn-primary" type="submit" style={{ width: "auto" }} disabled={submittingProduct}>
+              <button
+                type="submit"
+                disabled={submittingProduct}
+                className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm cursor-pointer hover:opacity-90 disabled:opacity-55 disabled:cursor-not-allowed transition"
+              >
                 {submittingProduct ? "Adding..." : "Add product"}
               </button>
             </form>
           </div>
 
-          <div className="card">
-            {products.length === 0 && <p className="muted">No products yet — add one above, or ask an admin to bulk-upload your catalog.</p>}
+          <div className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-6">
+            {products.length === 0 && (
+              <p className="text-ink-soft text-[13.5px]">
+                No products yet — add one above, or ask an admin to bulk-upload your catalog.
+              </p>
+            )}
             {products.length > 0 && (
-              <table className="data-table">
+              <table className="w-full border-collapse text-sm">
                 <thead>
-                  <tr><th>Name</th><th>Price</th><th>Status</th><th></th></tr>
+                  <tr>
+                    <th className="text-left text-xs uppercase tracking-wide text-ink-soft pb-2 border-b border-border">Name</th>
+                    <th className="text-left text-xs uppercase tracking-wide text-ink-soft pb-2 border-b border-border">Price</th>
+                    <th className="text-left text-xs uppercase tracking-wide text-ink-soft pb-2 border-b border-border">Status</th>
+                    <th className="border-b border-border"></th>
+                  </tr>
                 </thead>
                 <tbody>
                   {products.map((p) => (
                     <tr key={p.product_id}>
-                      <td>{p.name}</td>
-                      <td className="price">₹{p.price}</td>
-                      <td>
+                      <td className="py-2.5 pr-2 border-b border-border">{p.name}</td>
+                      <td className="py-2.5 pr-2 border-b border-border font-mono">₹{p.price}</td>
+                      <td className="py-2.5 pr-2 border-b border-border">
                         <select
                           value={p.availability_status}
                           onChange={(e) => updateProductStatus(p.product_id, e.target.value)}
-                          style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--color-border)" }}
+                          className="px-2 py-1.5 rounded-md border border-border bg-bg text-ink text-sm"
                         >
                           <option value="available">Available</option>
                           <option value="few_left">Few left</option>
                           <option value="out_of_stock">Out of stock</option>
                         </select>
                       </td>
-                      <td>
-                        <button className="btn btn-outline btn-sm" onClick={() => deleteProduct(p.product_id, p.name)}>Delete</button>
+                      <td className="py-2.5 border-b border-border">
+                        <button
+                          onClick={() => deleteProduct(p.product_id, p.name)}
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -335,36 +412,50 @@ export default function OwnerDashboard() {
             )}
           </div>
 
-          <h2 className="section-title">Incoming orders</h2>
-          <div className="card">
-            {orders.length === 0 && <p className="muted">No orders yet.</p>}
+          <h2 className="font-display font-semibold text-ink text-[15px] mt-7 mb-3">Incoming orders</h2>
+          <div className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-6">
+            {orders.length === 0 && <p className="text-ink-soft text-[13.5px]">No orders yet.</p>}
             {orders.length > 0 && (
-              <table className="data-table">
+              <table className="w-full border-collapse text-sm">
                 <thead>
-                  <tr><th>Product</th><th>Qty</th><th>Customer</th><th>Status</th><th>Next step</th></tr>
+                  <tr>
+                    <th className="text-left text-xs uppercase tracking-wide text-ink-soft pb-2 border-b border-border">Product</th>
+                    <th className="text-left text-xs uppercase tracking-wide text-ink-soft pb-2 border-b border-border">Qty</th>
+                    <th className="text-left text-xs uppercase tracking-wide text-ink-soft pb-2 border-b border-border">Customer</th>
+                    <th className="text-left text-xs uppercase tracking-wide text-ink-soft pb-2 border-b border-border">Status</th>
+                    <th className="text-left text-xs uppercase tracking-wide text-ink-soft pb-2 border-b border-border">Next step</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {orders.map((o) => (
                     <tr key={o.order_id}>
-                      <td>{o.product_name}</td>
-                      <td>{o.quantity}</td>
-                      <td>{o.customer_name}<br /><span className="muted">{o.delivery_address}</span></td>
-                      <td className="mono">{o.status.replace("_", " ")}</td>
-                      <td>
+                      <td className="py-2.5 pr-2 border-b border-border">{o.product_name}</td>
+                      <td className="py-2.5 pr-2 border-b border-border">{o.quantity}</td>
+                      <td className="py-2.5 pr-2 border-b border-border">
+                        {o.customer_name}
+                        <br />
+                        <span className="text-ink-soft text-[13.5px]">{o.delivery_address}</span>
+                      </td>
+                      <td className="py-2.5 pr-2 border-b border-border font-mono">{o.status.replace("_", " ")}</td>
+                      <td className="py-2.5 border-b border-border">
                         {ORDER_NEXT_STEPS[o.status]?.length > 0 ? (
-                          <div style={{ display: "flex", gap: 6 }}>
+                          <div className="flex gap-1.5">
                             {ORDER_NEXT_STEPS[o.status].map((next) => (
                               <button
                                 key={next}
-                                className={next === "cancelled" ? "btn btn-outline btn-sm" : "btn btn-pulse btn-sm"}
                                 onClick={() => advanceOrder(o.order_id, next)}
+                                className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md font-semibold text-[13px] cursor-pointer transition ${
+                                  next === "cancelled"
+                                    ? "border border-border bg-transparent text-ink hover:border-ink-soft"
+                                    : "bg-pulse text-white hover:opacity-90"
+                                }`}
                               >
                                 {next.replace("_", " ")}
                               </button>
                             ))}
                           </div>
                         ) : (
-                          <span className="muted">Final</span>
+                          <span className="text-ink-soft text-[13.5px]">Final</span>
                         )}
                       </td>
                     </tr>
