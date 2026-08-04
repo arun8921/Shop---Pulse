@@ -6,7 +6,7 @@ export default function PrivateRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="center-screen muted">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center p-5 text-ink-soft text-[13.5px]">Loading...</div>;
   }
 
   if (!user) {
