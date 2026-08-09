@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import apiClient from "../api/axiosClient";
 
@@ -170,7 +171,7 @@ export default function CustomerHome() {
   }
 
   return (
-    <div className="max-w-[1100px] mx-auto px-5">
+    <div className="w-full max-w-[1400px] mx-auto px-5">
       <h1 className="font-display font-semibold text-ink text-2xl mt-7">Find what's open nearby</h1>
       <p className="text-ink-soft text-[13.5px]">Live status and stock from shops around you.</p>
 
@@ -185,7 +186,7 @@ export default function CustomerHome() {
           <span>Searching around a spot you picked on the map.</span>
           <button
             onClick={resetToMyLocation}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition whitespace-nowrap"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2 whitespace-nowrap"
           >
             Use my location instead
           </button>
@@ -202,7 +203,7 @@ export default function CustomerHome() {
             placeholder="e.g. rice, paracetamol, notebooks"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+            className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
           />
         </div>
         <div className="flex-none w-[140px]">
@@ -213,7 +214,7 @@ export default function CustomerHome() {
             id="radius"
             value={radius}
             onChange={(e) => setRadius(Number(e.target.value))}
-            className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+            className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
           >
             <option value={1}>1 km</option>
             <option value={3}>3 km</option>
@@ -222,7 +223,7 @@ export default function CustomerHome() {
         </div>
         <button
           type="submit"
-          className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm cursor-pointer hover:opacity-90 transition"
+          className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm cursor-pointer hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
         >
           Search
         </button>
@@ -230,7 +231,7 @@ export default function CustomerHome() {
           <button
             type="button"
             onClick={clearSearch}
-            className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md border border-border bg-transparent text-ink font-semibold text-sm cursor-pointer hover:border-ink-soft transition"
+            className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md border border-border bg-transparent text-ink font-semibold text-sm cursor-pointer hover:border-ink-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
           >
             Clear
           </button>
@@ -284,7 +285,7 @@ export default function CustomerHome() {
 
               <button
                 onClick={() => navigate(`/shops/${shop.shop_id}`)}
-                className="mt-3 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition"
+                className="mt-3 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
               >
                 View shop
               </button>
@@ -292,7 +293,7 @@ export default function CustomerHome() {
           ))}
         </div>
 
-        <div className="relative rounded-2xl overflow-hidden border border-border h-[620px] [&_.leaflet-container]:rounded-2xl">
+        <div className="relative w-full rounded-2xl overflow-hidden border border-border h-[420px] sm:h-[500px] min-[861px]:h-[620px] [&_.leaflet-container]:h-full [&_.leaflet-container]:w-full [&_.leaflet-container]:rounded-2xl">
           <span className="absolute top-2 left-2 z-[1000] bg-white/95 px-2.5 py-1 rounded-full text-xs text-ink-soft shadow-[0_1px_2px_rgba(28,28,30,0.06)]">
             Click the map to search a different area
           </span>

@@ -169,7 +169,7 @@ export default function ShopDetail() {
                     onClick={() =>
                       setOrderingProductId(orderingProductId === product.product_id ? null : product.product_id)
                     }
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-pulse text-white font-semibold text-[13px] cursor-pointer hover:opacity-90 transition"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-pulse text-white font-semibold text-[13px] cursor-pointer hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
                   >
                     Order
                   </button>
@@ -186,7 +186,7 @@ export default function ShopDetail() {
                     min={1}
                     value={quantity}
                     onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+                    className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
                   />
                 </div>
 
@@ -197,7 +197,7 @@ export default function ShopDetail() {
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="Where should this go?"
-                      className="flex-1 px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+                      className="flex-1 px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
                     />
                     <button
                       type="button"
@@ -212,7 +212,7 @@ export default function ShopDetail() {
 
                 <button
                   onClick={() => handlePlaceOrder(product.product_id)}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-pulse text-white font-semibold text-[13px] cursor-pointer hover:opacity-90 transition"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-pulse text-white font-semibold text-[13px] cursor-pointer hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
                 >
                   Confirm order
                 </button>
@@ -242,7 +242,7 @@ export default function ShopDetail() {
               <select
                 value={reviewRating}
                 onChange={(e) => setReviewRating(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+                className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
               >
                 {[5, 4, 3, 2, 1].map((n) => (
                   <option key={n} value={n}>
@@ -257,13 +257,13 @@ export default function ShopDetail() {
                 rows={2}
                 value={reviewComment}
                 onChange={(e) => setReviewComment(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+                className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
               />
             </div>
             {reviewMessage && <p className="text-ink-soft text-[13.5px] mb-3">{reviewMessage}</p>}
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
             >
               Submit review
             </button>

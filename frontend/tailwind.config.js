@@ -1,22 +1,23 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: "class",
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        bg: "#FAF9F6",
-        surface: "#FFFFFF",
-        ink: "#1C1C1E",
-        "ink-soft": "#55565B",
-        border: "#E7E4DC",
-        pulse: "#16A34A",
-        "pulse-soft": "#E7F6EC",
-        coral: "#E4572E",
-        "coral-soft": "#FBEAE4",
-        amber: "#D97706",
-        "amber-soft": "#FDF1E0",
-        slate: "#2A4B7C",
-        "slate-soft": "#E9EEF5",
+        bg: "var(--color-bg)",
+        surface: "var(--color-surface)",
+        ink: "var(--color-ink)",
+        "ink-soft": "var(--color-ink-soft)",
+        border: "var(--color-border)",
+        pulse: "var(--color-pulse)",
+        "pulse-soft": "var(--color-pulse-soft)",
+        coral: "var(--color-coral)",
+        "coral-soft": "var(--color-coral-soft)",
+        amber: "var(--color-amber)",
+        "amber-soft": "var(--color-amber-soft)",
+        slate: "var(--color-slate)",
+        "slate-soft": "var(--color-slate-soft)",
       },
       fontFamily: {
         display: ["Space Grotesk", "sans-serif"],
@@ -25,9 +26,9 @@ module.exports = {
       },
       keyframes: {
         "pulse-beat": {
-          "0%": { boxShadow: "0 0 0 0 rgba(22,163,74,0.45)" },
-          "70%": { boxShadow: "0 0 0 7px rgba(22,163,74,0)" },
-          "100%": { boxShadow: "0 0 0 0 rgba(22,163,74,0)" },
+          "0%": { boxShadow: "0 0 0 0 rgba(16,185,129,0.45)" },
+          "70%": { boxShadow: "0 0 0 7px rgba(16,185,129,0)" },
+          "100%": { boxShadow: "0 0 0 0 rgba(16,185,129,0)" },
         },
       },
       animation: {

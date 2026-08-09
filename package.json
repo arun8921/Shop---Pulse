@@ -1,0 +1,24 @@
+{
+  "name": "shop-pulse",
+  "version": "1.0.0",
+  "description": "Full-stack project: Node.js/Express + MariaDB backend, React frontend. See backend/ and frontend/ folders for their own setup notes.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arun8921/Shop---Pulse.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/arun8921/Shop---Pulse/issues"
+  },
+  "homepage": "https://github.com/arun8921/Shop---Pulse#readme",
+  "devDependencies": {
+    "concurrently": "^10.0.4"
+  }
+}

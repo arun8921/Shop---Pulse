@@ -58,7 +58,7 @@ function HeroMap() {
   if (!coords) {
     return (
       <div className="relative bg-slate-soft rounded-2xl h-[280px] flex flex-col items-center justify-center text-center overflow-hidden">
-        <MapPin size={40} strokeWidth={1.5} color="#2A4B7C" />
+        <MapPin size={40} strokeWidth={1.5} color="#4F46E5" />
         <p className="font-mono text-ink-soft text-[13.5px] mt-3">Locating you...</p>
       </div>
     );
@@ -112,13 +112,13 @@ export default function Landing() {
             <div className="flex gap-3">
               <Link
                 to="/register"
-                className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm hover:opacity-90 transition"
+                className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
               >
                 Get started
               </Link>
               <a
                 href="#features"
-                className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md border border-border bg-transparent text-ink font-semibold text-sm hover:border-ink-soft transition"
+                className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md border border-border bg-transparent text-ink font-semibold text-sm hover:border-ink-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
               >
                 Learn more
               </a>
@@ -137,7 +137,7 @@ export default function Landing() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {FEATURES.map(({ icon: Icon, title, description }) => (
             <div key={title} className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-[22px]">
-              <Icon size={26} strokeWidth={1.6} color="#2A4B7C" />
+              <Icon size={26} strokeWidth={1.6} color="#4F46E5" />
               <h3 className="text-base text-ink mt-3.5 mb-1.5">{title}</h3>
               <p className="text-ink-soft text-[13.5px]">{description}</p>
             </div>
@@ -157,7 +157,7 @@ export default function Landing() {
               <ul className="list-none p-0 m-0">
                 {a.items.map((item) => (
                   <li key={item} className="flex items-start gap-2.5 text-[13.5px] text-ink mb-2.5">
-                    <CheckCircle2 size={16} strokeWidth={1.8} color="#16A34A" className="flex-shrink-0 mt-px" />
+                    <CheckCircle2 size={16} strokeWidth={1.8} color="#10B981" className="flex-shrink-0 mt-px" />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -174,7 +174,7 @@ export default function Landing() {
         </p>
         <Link
           to="/register"
-          className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-white text-slate font-semibold text-sm hover:opacity-90 transition"
+          className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-white text-slate font-semibold text-sm hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
         >
           Sign up now
         </Link>

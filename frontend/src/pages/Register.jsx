@@ -52,7 +52,7 @@ export default function Register() {
               onChange={(e) => setName(e.target.value)}
               required
               autoFocus
-              className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+              className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
             />
           </div>
 
@@ -66,7 +66,7 @@ export default function Register() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+              className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
             />
           </div>
 
@@ -81,7 +81,7 @@ export default function Register() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+              className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
             />
           </div>
 
@@ -93,7 +93,7 @@ export default function Register() {
               id="role"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+              className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
             >
               <option value="customer">Customer — browsing and ordering from shops</option>
               <option value="owner">Shop Owner — listing my shop and products</option>
@@ -111,7 +111,7 @@ export default function Register() {
 
         <p className="text-ink-soft text-[13.5px] mt-4 text-center">
           Already have an account?{" "}
-          <Link to="/login" className="text-slate font-medium hover:underline">
+          <Link to="/login" className="text-slate font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2 rounded-sm">
             Log in
           </Link>
         </p>

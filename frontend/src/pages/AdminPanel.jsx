@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import apiClient from "../api/axiosClient";
 
+
 const STATUS_TEXT = { open: "text-pulse", closed: "text-coral" };
 const STATUS_DOT = { open: "bg-pulse animate-pulse-beat", closed: "bg-coral" };
 
@@ -100,7 +101,7 @@ export default function AdminPanel() {
             <select
               value={uploadShopId}
               onChange={(e) => setUploadShopId(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+              className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
             >
               <option value="">Select a shop</option>
               {shops.map((s) => (
@@ -178,7 +179,7 @@ export default function AdminPanel() {
                     {!s.is_verified && (
                       <button
                         onClick={() => verifyShop(s.shop_id, s.name)}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-pulse text-white font-semibold text-[13px] cursor-pointer hover:opacity-90 transition"
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-pulse text-white font-semibold text-[13px] cursor-pointer hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
                       >
                         Verify
                       </button>

@@ -52,7 +52,7 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoFocus
-              className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+              className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
             />
           </div>
 
@@ -66,7 +66,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+              className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
             />
           </div>
 
@@ -81,7 +81,7 @@ export default function Login() {
 
         <p className="text-ink-soft text-[13.5px] mt-4 text-center">
           Don't have an account?{" "}
-          <Link to="/register" className="text-slate font-medium hover:underline">
+          <Link to="/register" className="text-slate font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2 rounded-sm">
             Sign up
           </Link>
         </p>

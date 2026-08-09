@@ -120,13 +120,13 @@ export default function CustomerDashboard() {
         <div className="flex gap-2.5 flex-wrap">
           <Link
             to="/discover"
-            className="inline-flex items-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm hover:opacity-90 transition"
+            className="inline-flex items-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
           >
             <MapPinned size={17} /> Explore nearby shops
           </Link>
           <Link
             to="/my-orders"
-            className="inline-flex items-center gap-1.5 px-[18px] py-2.5 rounded-md border border-border bg-transparent text-ink font-semibold text-sm hover:border-ink-soft transition"
+            className="inline-flex items-center gap-1.5 px-[18px] py-2.5 rounded-md border border-border bg-transparent text-ink font-semibold text-sm hover:border-ink-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
           >
             <ShoppingBag size={17} /> All orders
           </Link>
@@ -183,7 +183,7 @@ export default function CustomerDashboard() {
               <p className="text-ink-soft text-[13.5px]">You have no orders yet. Discover a local shop to get started.</p>
               <Link
                 to="/discover"
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-pulse text-white font-semibold text-[13px] hover:opacity-90 transition"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-pulse text-white font-semibold text-[13px] hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
               >
                 Find shops
               </Link>
@@ -219,7 +219,7 @@ export default function CustomerDashboard() {
           )}
 
           {!loading && orders.length > 0 && (
-            <Link to="/my-orders" className="inline-block mt-4 text-slate text-[13.5px] font-medium hover:underline">
+            <Link to="/my-orders" className="inline-block mt-4 text-slate text-[13.5px] font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2 rounded-sm">
               View full order history →
             </Link>
           )}
@@ -239,7 +239,7 @@ export default function CustomerDashboard() {
                   setProfileMessage("");
                   setEditingProfile(true);
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-transparent text-ink-soft font-semibold text-[13px] cursor-pointer hover:text-ink hover:bg-bg transition"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-transparent text-ink-soft font-semibold text-[13px] cursor-pointer hover:text-ink hover:bg-bg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
               >
                 <PencilLine size={15} /> Edit
               </button>
@@ -273,7 +273,7 @@ export default function CustomerDashboard() {
                   onChange={(event) => setProfileForm((prev) => ({ ...prev, name: event.target.value }))}
                   required
                   maxLength={100}
-                  className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+                  className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
                 />
               </div>
               <div className="mb-4">
@@ -287,7 +287,7 @@ export default function CustomerDashboard() {
                   onChange={(event) => setProfileForm((prev) => ({ ...prev, phone: event.target.value }))}
                   maxLength={20}
                   placeholder="Optional"
-                  className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+                  className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
                 />
               </div>
               {profileMessage && (
@@ -310,7 +310,7 @@ export default function CustomerDashboard() {
                     setProfileMessage("");
                     setEditingProfile(false);
                   }}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
                 >
                   Cancel
                 </button>

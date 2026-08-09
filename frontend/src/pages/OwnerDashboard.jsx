@@ -208,7 +208,7 @@ export default function OwnerDashboard() {
             <p className="text-ink-soft text-[13.5px] my-2.5 mb-[18px]">Register your first shop to get started.</p>
             <button
               onClick={() => setShowNewShopForm(true)}
-              className="w-full inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm cursor-pointer hover:opacity-90 transition"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm cursor-pointer hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
             >
               Register a shop
             </button>
@@ -239,7 +239,7 @@ export default function OwnerDashboard() {
         </div>
         <button
           onClick={() => setShowNewShopForm((v) => !v)}
-          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition"
+          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
         >
           {showNewShopForm ? "Cancel" : shops.length === 0 ? "+ Add a shop" : "+ Add another shop"}
         </button>
@@ -260,7 +260,7 @@ export default function OwnerDashboard() {
                 value={shopForm.name}
                 onChange={(e) => setShopForm({ ...shopForm, name: e.target.value })}
                 required
-                className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+                className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
               />
             </div>
             <div className="mb-4">
@@ -268,7 +268,7 @@ export default function OwnerDashboard() {
               <input
                 value={shopForm.address}
                 onChange={(e) => setShopForm({ ...shopForm, address: e.target.value })}
-                className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+                className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
               />
             </div>
 
@@ -278,7 +278,7 @@ export default function OwnerDashboard() {
             <button
               type="button"
               onClick={useMyLocation}
-              className="mb-4 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition"
+              className="mb-4 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
             >
               Use my current location instead
             </button>
@@ -288,7 +288,7 @@ export default function OwnerDashboard() {
               <input
                 value={shopForm.contact_number}
                 onChange={(e) => setShopForm({ ...shopForm, contact_number: e.target.value })}
-                className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+                className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
               />
             </div>
             <button
@@ -311,7 +311,7 @@ export default function OwnerDashboard() {
             </span>
             <button
               onClick={toggleStatus}
-              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-white font-semibold text-[13px] cursor-pointer hover:opacity-90 transition ${
+              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-white font-semibold text-[13px] cursor-pointer hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2 ${
                 activeShop.current_status === "open" ? "bg-coral" : "bg-pulse"
               }`}
             >
@@ -328,7 +328,7 @@ export default function OwnerDashboard() {
                   value={productForm.name}
                   onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
                   required
-                  className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+                  className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
                 />
               </div>
               <div className="w-[110px]">
@@ -340,7 +340,7 @@ export default function OwnerDashboard() {
                   value={productForm.price}
                   onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
                   required
-                  className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+                  className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
                 />
               </div>
               <div className="w-[150px]">
@@ -348,7 +348,7 @@ export default function OwnerDashboard() {
                 <select
                   value={productForm.availability_status}
                   onChange={(e) => setProductForm({ ...productForm, availability_status: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none"
+                  className="w-full px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
                 >
                   <option value="available">Available</option>
                   <option value="few_left">Few left</option>
@@ -400,7 +400,7 @@ export default function OwnerDashboard() {
                       <td className="py-2.5 border-b border-border">
                         <button
                           onClick={() => deleteProduct(p.product_id, p.name)}
-                          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition"
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
                         >
                           Delete
                         </button>

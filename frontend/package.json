@@ -16,7 +16,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "dev": "concurrently \"npm run start\" \"cd ../backend && npm run dev\""
   },
   "eslintConfig": {
     "extends": [
@@ -40,4 +41,6 @@
     "postcss": "^8.5.25",
     "tailwindcss": "^3.4.19"
   }
+
 }
+

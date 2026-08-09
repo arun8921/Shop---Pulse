@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import Navbar from "./components/Navbar";
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -34,9 +35,10 @@ function RoleDashboard() {
 
 export default function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <BrowserRouter>
-        <div className="page">
+        <div className="min-h-screen flex flex-col">
           <Navbar />
           <Routes>
             <Route path="/" element={<Home />} />
@@ -74,5 +76,6 @@ export default function App() {
         </div>
       </BrowserRouter>
     </AuthProvider>
+    </ThemeProvider>
   );
 }

@@ -2,19 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-bg: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-ink: #0F172A;
+  --color-ink-soft: #64748B;
+  --color-border: #E2E8F0;
+  --color-pulse: #10B981;
+  --color-pulse-soft: #ECFDF5;
+  --color-coral: #EF4444;
+  --color-coral-soft: #FEF2F2;
+  --color-amber: #F97316;
+  --color-amber-soft: #FFF7ED;
+  --color-slate: #4F46E5;
+  --color-slate-soft: #EEF2FF;
+}
+
+.dark {
+  --color-bg: #0F172A;
+  --color-surface: #1E293B;
+  --color-ink: #F1F5F9;
+  --color-ink-soft: #94A3B8;
+  --color-border: #334155;
+  --color-pulse: #34D399;
+  --color-pulse-soft: rgba(16, 185, 129, 0.15);
+  --color-coral: #F87171;
+  --color-coral-soft: rgba(239, 68, 68, 0.15);
+  --color-amber: #FB923C;
+  --color-amber-soft: rgba(249, 115, 22, 0.15);
+  --color-slate: #6366F1;
+  --color-slate-soft: rgba(79, 70, 229, 0.18);
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
 .you-are-here-tooltip {
   font-family: "IBM Plex Mono", monospace !important;
   font-size: 11px !important;
-  background: #2A4B7C !important;
+  background: var(--color-slate) !important;
   color: white !important;
   border: none !important;
   padding: 3px 8px !important;
   border-radius: 999px !important;
-  box-shadow: 0 1px 2px rgba(28, 28, 30, 0.06) !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06) !important;
 }
 .you-are-here-tooltip::before {
-  border-top-color: #2A4B7C !important;
+  border-top-color: var(--color-slate) !important;
 }
+
 .search-center-marker {
   filter: hue-rotate(190deg) saturate(1.4);
 }
