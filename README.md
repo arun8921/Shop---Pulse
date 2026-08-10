@@ -1,31 +1,111 @@
 # Shop-Pulse
 
-Full-stack project: Node.js/Express + MariaDB backend, React frontend.
-See backend/ and frontend/ folders for their own setup notes.
+Shop-Pulse is a full-stack local shop discovery and ordering platform that connects customers with nearby independent shops in real time.
 
-## Quick start
+The platform allows customers to discover nearby shops, search for products, check availability, place and track orders, while shop owners can manage their shops, products and orders. Administrators can manage the platform through a dedicated admin panel.
 
-1. Backend:
-   cd backend
-   mysql -u root -p < sql/schema.sql
-   cp .env.example .env   # fill in your DB password + a JWT secret
-   npm install
-   npm run dev
+## Tech Stack
 
-2. Frontend (separate terminal):
-   cd frontend
-   npm install
-   npm start
+### Frontend
+- React.js
+- React Router
+- Tailwind CSS
+- Lucide React
+- Leaflet / OpenStreetMap
 
-Both must be running at the same time (backend on :5000, frontend on :3000).
+### Backend
+- Node.js
+- Express.js
+- REST API
 
-## What's new in this version
-- Customers can cancel their own orders (while still 'placed' or 'confirmed')
-  via a new "My Orders" page.
-- Product search now returns shop coordinates too, so map markers show up
-  during product search, not just the default nearby-browse view.
-- Shop registration now has a click-to-pin-location map (LocationPicker
-  component) instead of only typed coordinates or GPS auto-fill — click
-  anywhere on the mini-map to drop a pin, or drag the pin to fine-tune, in
-  addition to the "Use my current location" button.
-# Shop---Pulse
+### Database
+- MariaDB
+
+### Authentication & Security
+- JWT-based authentication
+- Role-based access control
+- Protected routes
+
+### Development Tools
+- Git
+- GitHub
+- VS Code
+- Postman
+
+---
+
+## Main Features
+
+### Customer
+
+- User registration and login
+- Discover nearby shops using location
+- Search for products
+- Filter shops based on distance
+- View shop details
+- View product availability
+- Place orders
+- View order history
+- Cancel eligible orders
+- Track order status
+- Customer dashboard
+- Light / dark theme
+
+### Shop Owner
+
+- Owner authentication
+- Shop owner dashboard
+- Manage shop information
+- Add and manage products
+- Manage product availability and stock
+- View incoming orders
+- Update order status
+- Monitor shop activity
+
+### Administrator
+
+- Admin authentication
+- Admin dashboard
+- Manage users and platform data
+- Monitor shops and customers
+- Administrative controls
+
+### Location & Maps
+
+Shop-Pulse uses map-based location functionality to help customers discover nearby shops.
+
+Features include:
+
+- Current location detection
+- Radius-based shop discovery
+- Interactive map
+- Shop markers
+- Product-search-based shop locations
+- Manual location selection
+- Click-to-place location pin
+- Location fine-tuning using the map
+
+---
+
+## Application Flow
+
+```text
+                    Shop-Pulse
+                        |
+             +----------+----------+
+             |                     |
+          Customer              Shop Owner
+             |                     |
+       Discover Shops         Manage Shop
+             |                     |
+       Search Products        Manage Products
+             |                     |
+        Place Orders          Manage Orders
+             |
+        Track Orders
+
+                  Administrator
+                       |
+                Admin Dashboard
+                       |
+              Platform Management
