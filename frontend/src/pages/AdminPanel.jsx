@@ -43,7 +43,27 @@ export default function AdminPanel() {
       setError("Could not verify shop.");
     }
   }
+async function deleteShop(shopId, shopName) {
+  const confirmed = window.confirm(
+    `Are you sure you want to delete "${shopName}"?\n\nThis will permanently delete the shop and its products, orders, and reviews.`
+  );
 
+  if (!confirmed) return;
+
+  setError("");
+  setMessage("");
+
+  try {
+    const { data } = await apiClient.delete(`/admin/shops/${shopId}`);
+
+    setMessage(data.message);
+    loadShops();
+  } catch (err) {
+    setError(
+      err.response?.data?.message || "Could not delete shop."
+    );
+  }
+}
   async function handleUpload(e) {
     e.preventDefault();
     setMessage("");
@@ -176,15 +196,24 @@ export default function AdminPanel() {
                     {s.is_verified ? "✅ Verified" : "Pending"}
                   </td>
                   <td className="py-2.5 border-b border-border">
-                    {!s.is_verified && (
-                      <button
-                        onClick={() => verifyShop(s.shop_id, s.name)}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-pulse text-white font-semibold text-[13px] cursor-pointer hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
-                      >
-                        Verify
-                      </button>
-                    )}
-                  </td>
+  <div className="flex items-center gap-2">
+    {!s.is_verified && (
+      <button
+        onClick={() => verifyShop(s.shop_id, s.name)}
+        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-pulse text-white font-semibold text-[13px] cursor-pointer hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
+      >
+        Verify
+      </button>
+    )}
+
+    <button
+      onClick={() => deleteShop(s.shop_id, s.name)}
+      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-coral text-white font-semibold text-[13px] cursor-pointer hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
+    >
+      Delete
+    </button>
+  </div>
+</td>
                 </tr>
               ))}
             </tbody>

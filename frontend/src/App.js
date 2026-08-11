@@ -7,6 +7,8 @@ import PrivateRoute from "./components/PrivateRoute";
 
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Register from "./pages/Register";
 import CustomerHome from "./pages/CustomerHome";
 import ShopDetail from "./pages/ShopDetail";
@@ -53,6 +55,8 @@ export default function App() {
               }
             />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<PrivateRoute><RoleDashboard /></PrivateRoute>} />
             <Route

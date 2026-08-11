@@ -33,7 +33,34 @@ async function verifyShop(req, res) {
     return res.status(500).json({ message: "Something went wrong." });
   }
 }
+async function deleteShop(req, res) {
+  try {
+    const { id } = req.params;
 
+    const [rows] = await db.query(
+      "SELECT shop_id, name FROM shops WHERE shop_id = ?",
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Shop not found." });
+    }
+
+    await db.query(
+      "DELETE FROM shops WHERE shop_id = ?",
+      [id]
+    );
+
+    return res.json({
+      message: `"${rows[0].name}" deleted successfully.`,
+    });
+  } catch (err) {
+    console.error("Delete shop error:", err);
+    return res.status(500).json({
+      message: "Something went wrong while deleting the shop.",
+    });
+  }
+}
 async function bulkUploadProducts(req, res) {
   try {
     const { shop_id } = req.body;
@@ -96,4 +123,4 @@ async function bulkUploadProducts(req, res) {
   }
 }
 
-module.exports = { listShops, verifyShop, bulkUploadProducts };
+module.exports = { listShops, verifyShop,deleteShop, bulkUploadProducts };

@@ -1,0 +1,4 @@
+USE shop_pulse;
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS reset_token VARCHAR(255) NULL,
+  ADD COLUMN IF NOT EXISTS reset_token_expires DATETIME NULL;
