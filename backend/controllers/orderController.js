@@ -13,11 +13,31 @@ async function placeOrder(req, res) {
     const { shop_id, product_id, quantity, delivery_address } = req.body;
     const customer_id = req.user.user_id;
 
-    if (!shop_id || !product_id || !delivery_address) {
-      return res.status(400).json({ message: "shop_id, product_id, and delivery_address are required." });
-    }
+ if (!shop_id || !product_id || !delivery_address) {
+  return res.status(400).json({
+    message: "shop_id, product_id, and delivery_address are required."
+  });
+}
 
-    const qty = quantity && Number.isInteger(quantity) && quantity > 0 ? quantity : 1;
+// Check whether the shop is open
+const [shopRows] = await db.query(
+  "SELECT shop_id, current_status FROM shops WHERE shop_id = ?",
+  [shop_id]
+);
+
+if (shopRows.length === 0) {
+  return res.status(404).json({
+    message: "Shop not found."
+  });
+}
+
+if (shopRows[0].current_status !== "open") {
+  return res.status(400).json({
+    message: "This shop is currently closed and is not accepting orders."
+  });
+}
+
+const qty = quantity && Number.isInteger(quantity) && quantity > 0 ? quantity : 1;
 
     const [productRows] = await db.query(
       "SELECT product_id, shop_id, availability_status FROM products WHERE product_id = ? AND shop_id = ?",

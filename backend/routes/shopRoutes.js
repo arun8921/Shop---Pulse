@@ -5,6 +5,7 @@ const {
   getMyShops,
   updateShopDetails,
   updateShopStatus,
+  resetShopStatusToAutomatic,
   getNearbyShops,
   getShopStatuses,
   getCategories,
@@ -22,6 +23,7 @@ router.get("/mine/summary", verifyToken, requireRole(["owner"]), getOwnerSummary
 router.get("/mine", verifyToken, requireRole(["owner"]), getMyShops);
 router.patch("/:id", verifyToken, requireRole(["owner"]), updateShopDetails);
 router.patch("/:id/status", verifyToken, requireRole(["owner"]), updateShopStatus);
+router.patch("/:id/status/automatic",verifyToken,requireRole(["owner"]),resetShopStatusToAutomatic);
 router.get("/:id", getShopById);
 
 module.exports = router;

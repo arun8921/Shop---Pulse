@@ -9,6 +9,8 @@ const orderRoutes = require("./routes/orderRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 
+const { syncAutomaticShopStatuses } = require("./controllers/shopController");
+
 const app = express();
 
 app.use(cors());
@@ -29,3 +31,9 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Shop-Pulse backend running on http://localhost:${PORT}`);
 });
+
+syncAutomaticShopStatuses();
+
+setInterval(() => {
+  syncAutomaticShopStatuses();
+}, 30000);

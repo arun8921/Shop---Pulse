@@ -21,9 +21,24 @@ export default function OwnerDashboard() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [scheduleForm, setScheduleForm] = useState({
+  default_open_time: "09:00",
+  default_close_time: "20:00",
+});
+
+const [savingSchedule, setSavingSchedule] = useState(false);
 
   const [showNewShopForm, setShowNewShopForm] = useState(false);
-  const [shopForm, setShopForm] = useState({ name: "", address: "", latitude: "", longitude: "", contact_number: "" });
+  const [shopForm, setShopForm] = useState({
+  name: "",
+  address: "",
+  latitude: "",
+  longitude: "",
+  contact_number: "",
+  default_open_time: "09:00",
+  default_close_time: "20:00",
+});
+
   const [submittingShop, setSubmittingShop] = useState(false);
 
   const [productForm, setProductForm] = useState({ name: "", price: "", availability_status: "available" });
@@ -73,6 +88,17 @@ export default function OwnerDashboard() {
     return () => clearInterval(interval);
   }, [activeShopId, loadShopData]);
 
+  useEffect(() => {
+  const shop = shops.find((s) => s.shop_id === activeShopId);
+
+  if (!shop) return;
+
+  setScheduleForm({
+    default_open_time: String(shop.default_open_time || "09:00").slice(0, 5),
+    default_close_time: String(shop.default_close_time || "20:00").slice(0, 5),
+  });
+}, [shops, activeShopId]);
+
   const activeShop = shops.find((s) => s.shop_id === activeShopId);
 
   async function handleCreateShop(e) {
@@ -86,15 +112,25 @@ export default function OwnerDashboard() {
     setSubmittingShop(true);
     try {
       await apiClient.post("/shops", {
-        name: shopForm.name,
-        address: shopForm.address,
-        latitude: parseFloat(shopForm.latitude),
-        longitude: parseFloat(shopForm.longitude),
-        contact_number: shopForm.contact_number,
-      });
+  name: shopForm.name,
+  address: shopForm.address,
+  latitude: parseFloat(shopForm.latitude),
+  longitude: parseFloat(shopForm.longitude),
+  contact_number: shopForm.contact_number,
+  default_open_time: shopForm.default_open_time,
+  default_close_time: shopForm.default_close_time,
+});
       setMessage("Shop registered successfully.");
       setShowNewShopForm(false);
-      setShopForm({ name: "", address: "", latitude: "", longitude: "", contact_number: "" });
+      setShopForm({
+  name: "",
+  address: "",
+  latitude: "",
+  longitude: "",
+  contact_number: "",
+  default_open_time: "09:00",
+  default_close_time: "20:00",
+});
       loadShops();
     } catch (err) {
       setError(err.response?.data?.message || "Could not register the shop.");
@@ -117,7 +153,28 @@ export default function OwnerDashboard() {
       }));
     });
   }
+async function saveSchedule() {
+  if (!activeShop) return;
 
+  setError("");
+  setMessage("");
+  setSavingSchedule(true);
+
+  try {
+    await apiClient.patch(`/shops/${activeShop.shop_id}`, {
+      default_open_time: scheduleForm.default_open_time,
+      default_close_time: scheduleForm.default_close_time,
+    });
+
+    setMessage("Shop schedule updated successfully.");
+
+    await loadShops();
+  } catch (err) {
+    setError(err.response?.data?.message || "Could not update shop schedule.");
+  } finally {
+    setSavingSchedule(false);
+  }
+}
   async function toggleStatus() {
     if (!activeShop) return;
     setError("");
@@ -212,7 +269,7 @@ export default function OwnerDashboard() {
             >
               Register a shop
             </button>
-          </div>
+          </div>  
         </div>
       </div>
     );
@@ -291,6 +348,43 @@ export default function OwnerDashboard() {
                 className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
               />
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+  <div>
+    <label className="block text-[13px] font-medium text-ink-soft mb-1.5">
+      Opening time
+    </label>
+    <input
+      type="time"
+      value={shopForm.default_open_time}
+      onChange={(e) =>
+        setShopForm({
+          ...shopForm,
+          default_open_time: e.target.value,
+        })
+      }
+      required
+      className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
+    />
+  </div>
+
+  <div>
+    <label className="block text-[13px] font-medium text-ink-soft mb-1.5">
+      Closing time
+    </label>
+    <input
+      type="time"
+      value={shopForm.default_close_time}
+      onChange={(e) =>
+        setShopForm({
+          ...shopForm,
+          default_close_time: e.target.value,
+        })
+      }
+      required
+      className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
+    />
+  </div>
+</div>
             <button
               type="submit"
               disabled={submittingShop}
@@ -318,7 +412,56 @@ export default function OwnerDashboard() {
               Mark as {activeShop.current_status === "open" ? "closed" : "open"}
             </button>
           </div>
+                <div className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-6 mb-6">
+  <h2 className="font-display font-semibold text-ink text-[15px] mb-3">
+    Shop schedule
+  </h2>
 
+  <div className="flex gap-3 flex-wrap items-end">
+    <div>
+      <label className="block text-[13px] font-medium text-ink-soft mb-1.5">
+        Opening time
+      </label>
+      <input
+        type="time"
+        value={scheduleForm.default_open_time}
+        onChange={(e) =>
+          setScheduleForm((prev) => ({
+            ...prev,
+            default_open_time: e.target.value,
+          }))
+        }
+        className="px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
+      />
+    </div>
+
+    <div>
+      <label className="block text-[13px] font-medium text-ink-soft mb-1.5">
+        Closing time
+      </label>
+      <input
+        type="time"
+        value={scheduleForm.default_close_time}
+        onChange={(e) =>
+          setScheduleForm((prev) => ({
+            ...prev,
+            default_close_time: e.target.value,
+          }))
+        }
+        className="px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
+      />
+    </div>
+
+    <button
+      type="button"
+      onClick={saveSchedule}
+      disabled={savingSchedule}
+      className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm cursor-pointer hover:opacity-90 disabled:opacity-55 disabled:cursor-not-allowed transition"
+    >
+      {savingSchedule ? "Saving..." : "Save schedule"}
+    </button>
+  </div>
+</div>
           <h2 className="font-display font-semibold text-ink text-[15px] mb-3">Products</h2>
           <div className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-6 mb-3">
             <form onSubmit={handleAddProduct} className="flex gap-2.5 flex-wrap items-end">

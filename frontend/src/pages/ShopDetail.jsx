@@ -14,6 +14,7 @@ export default function ShopDetail() {
   const { user } = useAuth();
 
   const [products, setProducts] = useState([]);
+  const [shop, setShop] = useState(null);
   const [reviews, setReviews] = useState({ average_rating: 0, review_count: 0, reviews: [] });
   const [loading, setLoading] = useState(true);
   const [orderingProductId, setOrderingProductId] = useState(null);
@@ -35,6 +36,7 @@ export default function ShopDetail() {
         apiClient.get(`/reviews/shop/${shopId}`),
       ]);
       setProducts(productsRes.data.products || []);
+      setShop(productsRes.data.shop || null);
       setReviews(reviewsRes.data);
     } catch (err) {
       // non-fatal
@@ -48,8 +50,14 @@ export default function ShopDetail() {
   }, [loadData]);
 
   async function handlePlaceOrder(productId) {
+    
     setOrderError("");
     setOrderMessage("");
+
+    if (shop?.current_status !== "open") {
+  setOrderError("This shop is currently closed.");
+  return;
+}
     if (!address.trim()) {
       setOrderError("Please enter a delivery address.");
       return;
@@ -125,6 +133,17 @@ export default function ShopDetail() {
     <div className="max-w-[1100px] mx-auto px-5 pb-[60px]">
       <div className="mt-7 mb-5">
         <h1 className="font-display font-semibold text-ink text-2xl">Shop #{shopId}</h1>
+        {shop && (
+         <p
+           className={`font-mono text-[12px] mt-1 uppercase tracking-wide ${
+           shop.current_status === "open"
+             ? "text-pulse"
+             : "text-coral"
+            }`}
+          >
+      ● {shop.current_status}
+        </p>
+        )}
         {reviews.review_count > 0 && (
           <p className="font-mono text-ink-soft text-[13.5px] mt-1">
             ★ {reviews.average_rating} ({reviews.review_count} review{reviews.review_count === 1 ? "" : "s"})
@@ -164,8 +183,11 @@ export default function ShopDetail() {
                 >
                   {product.availability_status.replace("_", " ")}
                 </span>
-                {user && user.role === "customer" && product.availability_status !== "out_of_stock" && (
-                  <button
+                {user &&
+  user.role === "customer" &&
+  shop?.current_status === "open" &&
+  product.availability_status !== "out_of_stock" && (
+                 <button
                     onClick={() =>
                       setOrderingProductId(orderingProductId === product.product_id ? null : product.product_id)
                     }
@@ -173,7 +195,16 @@ export default function ShopDetail() {
                   >
                     Order
                   </button>
+                  
                 )}
+               {user &&
+  user.role === "customer" &&
+  shop?.current_status !== "open" &&
+  product.availability_status !== "out_of_stock" && (
+    <span className="text-coral text-[12px] font-medium">
+      Shop is closed
+    </span>
+  )}
               </span>
             </div>
 

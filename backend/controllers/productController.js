@@ -60,24 +60,48 @@ async function createProduct(req, res) {
 async function getProductsByShop(req, res) {
   try {
     const shopId = parsePositiveId(req.params.shopId, "Shop ID");
-    const [shopRows] = await db.query(
-      "SELECT shop_id FROM shops WHERE shop_id = ? AND is_verified = TRUE",
-      [shopId]
-    );
+
+   const [shopRows] = await db.query(
+  `SELECT shop_id, name, address, current_status
+   FROM shops
+   WHERE shop_id = ? AND is_verified = TRUE`,
+  [shopId]
+);
+
     if (shopRows.length === 0) {
-      return res.status(404).json({ message: "Shop not found or not yet verified." });
+      return res.status(404).json({
+        message: "Shop not found or not yet verified.",
+      });
     }
 
     const [rows] = await db.query(
-      `SELECT product_id, shop_id, name, price, availability_status, updated_at
-       FROM products
-       WHERE shop_id = ?
-       ORDER BY name ASC, product_id ASC`,
-      [shopId]
-    );
-    return res.json({ products: rows });
+  `SELECT 
+      p.product_id,
+      p.shop_id,
+      p.name,
+      p.price,
+      p.availability_status,
+      p.updated_at
+   FROM products p
+   WHERE p.shop_id = ?
+   ORDER BY p.name ASC, p.product_id ASC`,
+  [shopId]
+);
+
+    return res.json({
+      shop: {
+        shop_id: shopRows[0].shop_id,
+        current_status: shopRows[0].current_status,
+      },
+      products: rows,
+    });
   } catch (err) {
-    return respondWithError(res, err, "Something went wrong.", "Get products by shop error:");
+    return respondWithError(
+      res,
+      err,
+      "Something went wrong.",
+      "Get products by shop error:"
+    );
   }
 }
 

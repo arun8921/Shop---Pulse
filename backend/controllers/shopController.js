@@ -26,6 +26,22 @@ const SHOP_WRITE_FIELDS = [
   "default_close_time",
 ];
 
+function getScheduledShopStatus(openTime, closeTime) {
+  const now = new Date();
+
+  const currentSeconds =
+    now.getHours() * 3600 +
+    now.getMinutes() * 60 +
+    now.getSeconds();
+
+  const openSeconds = timeToSeconds(openTime);
+  const closeSeconds = timeToSeconds(closeTime);
+
+  return currentSeconds >= openSeconds && currentSeconds < closeSeconds
+    ? "open"
+    : "closed";
+}
+
 const SHOP_SUMMARY_JOINS = `
   LEFT JOIN categories c ON s.category_id = c.category_id
   LEFT JOIN (
@@ -91,7 +107,46 @@ function validateHours(openTime, closeTime) {
     throw new ValidationError("Closing time must be later than opening time.");
   }
 }
+function getAutomaticShopStatus(openTime, closeTime) {
+  const now = new Date();
 
+  const currentSeconds =
+    now.getHours() * 3600 +
+    now.getMinutes() * 60 +
+    now.getSeconds();
+
+  const openSeconds = timeToSeconds(openTime);
+  const closeSeconds = timeToSeconds(closeTime);
+
+  return currentSeconds >= openSeconds && currentSeconds < closeSeconds
+    ? "open"
+    : "closed";
+}
+async function syncAutomaticShopStatuses() {
+  try {
+    const [shops] = await db.query(
+      `SELECT shop_id, default_open_time, default_close_time
+       FROM shops
+       WHERE is_manually_overridden = FALSE`
+    );
+
+    for (const shop of shops) {
+      const automaticStatus = getAutomaticShopStatus(
+        shop.default_open_time,
+        shop.default_close_time
+      );
+
+      await db.query(
+        `UPDATE shops
+         SET current_status = ?
+         WHERE shop_id = ?`,
+        [automaticStatus, shop.shop_id]
+      );
+    }
+  } catch (err) {
+    console.error("Automatic shop status sync error:", err);
+  }
+}
 async function createShop(req, res) {
   try {
     ensureOnlyFields(req.body, SHOP_WRITE_FIELDS);
@@ -230,19 +285,65 @@ async function updateShopStatus(req, res) {
   try {
     const shopId = parsePositiveId(req.params.id, "Shop ID");
     const { status } = req.body || {};
+
     if (!["open", "closed"].includes(status)) {
       return res.status(400).json({ message: "Status must be 'open' or 'closed'." });
     }
 
     await getOwnedShop(shopId, req.user.user_id);
+
     await db.query(
-      "UPDATE shops SET current_status = ?, is_manually_overridden = TRUE WHERE shop_id = ?",
+      `UPDATE shops
+       SET current_status = ?,
+           is_manually_overridden = TRUE,
+           manual_override_date = CURDATE()
+       WHERE shop_id = ?`,
       [status, shopId]
     );
 
-    return res.json({ message: `Shop marked as ${status}.` });
+    return res.json({
+      message: `Shop marked as ${status} for today.`,
+    });
   } catch (err) {
-    return respondWithError(res, err, "Something went wrong.", "Update shop status error:");
+    return respondWithError(
+      res,
+      err,
+      "Something went wrong.",
+      "Update shop status error:"
+    );
+  }
+}
+
+async function resetShopStatusToAutomatic(req, res) {
+  try {
+    const shopId = parsePositiveId(req.params.id, "Shop ID");
+
+    const shop = await getOwnedShop(shopId, req.user.user_id);
+
+    const automaticStatus = getAutomaticShopStatus(
+      shop.default_open_time,
+      shop.default_close_time
+    );
+
+    await db.query(
+      `UPDATE shops
+       SET current_status = ?, is_manually_overridden = FALSE
+       WHERE shop_id = ?`,
+      [automaticStatus, shopId]
+    );
+
+    return res.json({
+      message: "Shop is now using automatic opening hours.",
+      current_status: automaticStatus,
+      is_manually_overridden: false,
+    });
+  } catch (err) {
+    return respondWithError(
+      res,
+      err,
+      "Something went wrong.",
+      "Reset shop status error:"
+    );
   }
 }
 
@@ -260,8 +361,18 @@ async function getNearbyShops(req, res) {
       ))
     ))`;
     const query = `
-      SELECT s.shop_id, s.name, s.address, s.latitude, s.longitude,
-        s.current_status, s.last_updated, s.is_verified,
+     SELECT s.shop_id, s.name, s.address, s.latitude, s.longitude,
+  CASE
+    WHEN s.is_manually_overridden = TRUE THEN s.current_status
+    ELSE
+      CASE
+        WHEN TIME(NOW()) >= s.default_open_time
+          AND TIME(NOW()) < s.default_close_time
+        THEN 'open'
+        ELSE 'closed'
+      END
+  END AS current_status,
+  s.last_updated, s.is_verified,
         c.name AS category_name,
         COALESCE(rs.average_rating, 0) AS average_rating,
         COALESCE(rs.review_count, 0) AS review_count,
@@ -284,6 +395,48 @@ async function getNearbyShops(req, res) {
   } catch (err) {
     return respondWithError(res, err, "Something went wrong.", "Get nearby shops error:");
   }
+}
+
+async function syncShopSchedule(shopId) {
+  const [rows] = await db.query(
+    `SELECT default_open_time, default_close_time,
+            current_status, is_manually_overridden, manual_override_date
+     FROM shops
+     WHERE shop_id = ?`,
+    [shopId]
+  );
+
+  if (rows.length === 0) return null;
+
+  const shop = rows[0];
+
+  // Respect owner's manual decision for today.
+  if (
+    shop.is_manually_overridden &&
+    shop.manual_override_date &&
+    String(shop.manual_override_date).slice(0, 10) ===
+      new Date().toISOString().slice(0, 10)
+  ) {
+    return shop.current_status;
+  }
+
+  const scheduledStatus = getScheduledShopStatus(
+    shop.default_open_time,
+    shop.default_close_time
+  );
+
+  if (shop.current_status !== scheduledStatus || shop.is_manually_overridden) {
+    await db.query(
+      `UPDATE shops
+       SET current_status = ?,
+           is_manually_overridden = FALSE,
+           manual_override_date = NULL
+       WHERE shop_id = ?`,
+      [scheduledStatus, shopId]
+    );
+  }
+
+  return scheduledStatus;
 }
 
 async function getShopStatuses(req, res) {
@@ -375,6 +528,9 @@ module.exports = {
   getMyShops,
   updateShopDetails,
   updateShopStatus,
+  resetShopStatusToAutomatic,
+  syncAutomaticShopStatuses,
+  syncShopSchedule,
   getNearbyShops,
   getShopStatuses,
   getCategories,

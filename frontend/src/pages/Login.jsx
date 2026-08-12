@@ -60,9 +60,7 @@ export default function Login() {
              <label htmlFor="password" className="block text-[13px] font-medium text-ink-soft">
                 Password
               </label>
-              <Link to="/forgot-password" className="text-[12.5px] text-slate font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2 rounded-sm">
-                Forgot password?
-              </Link>
+            
             <input
               id="password"
               type="password"
@@ -71,6 +69,9 @@ export default function Login() {
               required
               className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
             />
+              <Link to="/forgot-password" className="text-[12.5px] text-slate font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2 rounded-sm">
+                Forgot password?
+              </Link>
           </div>
 
           <button
