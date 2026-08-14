@@ -26,21 +26,7 @@ const SHOP_WRITE_FIELDS = [
   "default_close_time",
 ];
 
-function getScheduledShopStatus(openTime, closeTime) {
-  const now = new Date();
 
-  const currentSeconds =
-    now.getHours() * 3600 +
-    now.getMinutes() * 60 +
-    now.getSeconds();
-
-  const openSeconds = timeToSeconds(openTime);
-  const closeSeconds = timeToSeconds(closeTime);
-
-  return currentSeconds >= openSeconds && currentSeconds < closeSeconds
-    ? "open"
-    : "closed";
-}
 
 const SHOP_SUMMARY_JOINS = `
   LEFT JOIN categories c ON s.category_id = c.category_id
@@ -108,19 +94,32 @@ function validateHours(openTime, closeTime) {
   }
 }
 function getAutomaticShopStatus(openTime, closeTime) {
-  const now = new Date();
+    const now = new Date();
 
-  const currentSeconds =
-    now.getHours() * 3600 +
-    now.getMinutes() * 60 +
-    now.getSeconds();
+    // Always calculate shop time using IST
+    const parts = new Intl.DateTimeFormat("en-IN", {
+        timeZone: "Asia/Kolkata",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hourCycle: "h23",
+    }).formatToParts(now);
 
-  const openSeconds = timeToSeconds(openTime);
-  const closeSeconds = timeToSeconds(closeTime);
+    const hour = Number(parts.find((part) => part.type === "hour").value);
+    const minute = Number(parts.find((part) => part.type === "minute").value);
+    const second = Number(parts.find((part) => part.type === "second").value);
 
-  return currentSeconds >= openSeconds && currentSeconds < closeSeconds
-    ? "open"
-    : "closed";
+    const currentSeconds =
+        hour * 3600 +
+        minute * 60 +
+        second;
+
+    const openSeconds = timeToSeconds(openTime);
+    const closeSeconds = timeToSeconds(closeTime);
+
+    return currentSeconds >= openSeconds && currentSeconds < closeSeconds
+        ? "open"
+        : "closed";
 }
 async function syncAutomaticShopStatuses() {
   try {
@@ -195,6 +194,64 @@ async function createShop(req, res) {
 
 async function getMyShops(req, res) {
   try {
+    const [shops] = await db.query(
+      `SELECT shop_id, default_open_time, default_close_time,
+              current_status, is_manually_overridden, manual_override_date
+       FROM shops
+       WHERE owner_id = ?
+       ORDER BY created_at DESC, shop_id DESC`,
+      [req.user.user_id]
+    );
+
+    // Synchronize automatic statuses
+    for (const shop of shops) {
+      // If owner manually changed today's status,
+      // respect that decision.
+      const todayIST = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Kolkata",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date());
+
+      const manualOverrideDate = shop.manual_override_date
+        ? new Date(shop.manual_override_date)
+            .toISOString()
+            .slice(0, 10)
+        : null;
+
+      if (
+        shop.is_manually_overridden &&
+        manualOverrideDate === todayIST
+      ) {
+        continue;
+      }
+
+      const automaticStatus = getAutomaticShopStatus(
+        shop.default_open_time,
+        shop.default_close_time
+      );
+
+      if (
+        shop.current_status !== automaticStatus ||
+        shop.is_manually_overridden
+      ) {
+        await db.query(
+          `UPDATE shops
+           SET current_status = ?,
+               is_manually_overridden = FALSE,
+               manual_override_date = NULL
+           WHERE shop_id = ?`,
+          [automaticStatus, shop.shop_id]
+        );
+
+        shop.current_status = automaticStatus;
+        shop.is_manually_overridden = false;
+        shop.manual_override_date = null;
+      }
+    }
+
+    // Now fetch the complete shop information
     const [rows] = await db.query(
       `SELECT ${summarizeShopFields()}
        FROM shops s
@@ -203,9 +260,16 @@ async function getMyShops(req, res) {
        ORDER BY s.created_at DESC, s.shop_id DESC`,
       [req.user.user_id]
     );
+
     return res.json({ shops: rows });
+
   } catch (err) {
-    return respondWithError(res, err, "Something went wrong.", "Get my shops error:");
+    return respondWithError(
+      res,
+      err,
+      "Something went wrong.",
+      "Get my shops error:"
+    );
   }
 }
 
@@ -257,13 +321,32 @@ async function updateShopDetails(req, res) {
     validateHours(openTime, closeTime);
 
     if (hasOwn(req.body, "default_open_time")) {
-      fields.push("default_open_time = ?");
-      values.push(openTime);
-    }
-    if (hasOwn(req.body, "default_close_time")) {
-      fields.push("default_close_time = ?");
-      values.push(closeTime);
-    }
+  fields.push("default_open_time = ?");
+  values.push(openTime);
+}
+
+if (hasOwn(req.body, "default_close_time")) {
+  fields.push("default_close_time = ?");
+  values.push(closeTime);
+}
+
+// Changing the schedule means we should return
+// the shop to automatic schedule control.
+if (
+  hasOwn(req.body, "default_open_time") ||
+  hasOwn(req.body, "default_close_time")
+) {
+  const automaticStatus = getAutomaticShopStatus(
+    openTime,
+    closeTime
+  );
+
+  fields.push("current_status = ?");
+  values.push(automaticStatus);
+
+  fields.push("is_manually_overridden = FALSE");
+  fields.push("manual_override_date = NULL");
+}
 
     values.push(shopId);
     await db.query(`UPDATE shops SET ${fields.join(", ")} WHERE shop_id = ?`, values);
@@ -362,16 +445,7 @@ async function getNearbyShops(req, res) {
     ))`;
     const query = `
      SELECT s.shop_id, s.name, s.address, s.latitude, s.longitude,
-  CASE
-    WHEN s.is_manually_overridden = TRUE THEN s.current_status
-    ELSE
-      CASE
-        WHEN TIME(NOW()) >= s.default_open_time
-          AND TIME(NOW()) < s.default_close_time
-        THEN 'open'
-        ELSE 'closed'
-      END
-  END AS current_status,
+  s.current_status,
   s.last_updated, s.is_verified,
         c.name AS category_name,
         COALESCE(rs.average_rating, 0) AS average_rating,
@@ -420,10 +494,10 @@ async function syncShopSchedule(shopId) {
     return shop.current_status;
   }
 
-  const scheduledStatus = getScheduledShopStatus(
-    shop.default_open_time,
-    shop.default_close_time
-  );
+ const scheduledStatus = getAutomaticShopStatus(
+  shop.default_open_time,
+  shop.default_close_time
+);
 
   if (shop.current_status !== scheduledStatus || shop.is_manually_overridden) {
     await db.query(

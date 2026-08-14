@@ -48,6 +48,9 @@ const [savingSchedule, setSavingSchedule] = useState(false);
     setLoading(true);
     try {
       const { data } = await apiClient.get("/shops/mine");
+
+console.log("MY SHOPS API RESPONSE:", data);
+console.log("SHOP STATUS:", data.shops?.[0]?.current_status);
       setShops(data.shops || []);
       if (data.shops && data.shops.length > 0 && !activeShopId) {
         setActiveShopId(data.shops[0].shop_id);
