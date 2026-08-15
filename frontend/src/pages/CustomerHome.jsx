@@ -1,37 +1,40 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents } from "react-leaflet";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { MapPin, Navigation, Store, Search, ChevronDown, Star, LayoutGrid, Clock } from "lucide-react";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import apiClient from "../api/axiosClient";
 
-const openIcon = new L.Icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
-const closedIcon = new L.Icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [20, 33],
-  iconAnchor: [10, 33],
-});
-const searchCenterIcon = new L.Icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [22, 36],
-  iconAnchor: [11, 36],
-  className: "search-center-marker",
+const searchCenterIcon = new L.divIcon({
+  className: "custom-glowing-marker",
+  html: `
+    <div class="relative flex items-center justify-center w-10 h-10">
+      <div class="absolute inset-0 rounded-full bg-slate-400 opacity-20 animate-ping"></div>
+      <div class="absolute inset-2 rounded-full bg-slate-400 opacity-40"></div>
+      <div class="w-3 h-3 bg-slate-200 rounded-full shadow-[0_0_10px_rgba(255,255,255,1)]"></div>
+    </div>
+  `,
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
 });
 
-const BADGE_STYLES = {
-  available: "bg-pulse-soft text-pulse",
-  out_of_stock: "bg-coral-soft text-coral",
-  few_left: "bg-amber-soft text-amber",
+const createGlowingIcon = (isOpen) => {
+  const colorClass = isOpen ? 'bg-pulse' : 'bg-coral';
+  const shadowColor = isOpen ? 'rgba(16,185,129,1)' : 'rgba(239,68,68,1)';
+  return new L.divIcon({
+    className: "custom-glowing-marker",
+    html: `
+      <div class="relative flex items-center justify-center w-8 h-8">
+        <div class="absolute inset-0 rounded-full ${colorClass} opacity-20 animate-ping" style="animation-duration: 2s;"></div>
+        <div class="absolute inset-2 rounded-full ${colorClass} opacity-40"></div>
+        <div class="w-2.5 h-2.5 ${colorClass} rounded-full shadow-[0_0_10px_${shadowColor}]"></div>
+      </div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+  });
 };
-const STATUS_TEXT = { open: "text-pulse", closed: "text-coral" };
-const STATUS_DOT = { open: "bg-pulse animate-pulse-beat", closed: "bg-coral" };
 
 function RecenterMap({ lat, lng }) {
   const map = useMap();
@@ -52,32 +55,74 @@ function ClickToSearchHandler({ onPick }) {
 
 export default function CustomerHome() {
   const navigate = useNavigate();
-  const [coords, setCoords] = useState(null);
-  const [myCoords, setMyCoords] = useState(null);
-  const [isManualLocation, setIsManualLocation] = useState(false);
-  const [radius, setRadius] = useState(3);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlQuery = searchParams.get("q") || "";
+
+  const [coords, setCoords] = useState(() => {
+    const saved = sessionStorage.getItem("sp_coords");
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [myCoords, setMyCoords] = useState(() => {
+    const saved = sessionStorage.getItem("sp_myCoords");
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [isManualLocation, setIsManualLocation] = useState(() => {
+    return sessionStorage.getItem("sp_isManual") === "true";
+  });
+  const [radius, setRadius] = useState(() => {
+    return Number(sessionStorage.getItem("sp_radius")) || 5;
+  });
+  
   const [shops, setShops] = useState([]);
-  const [query, setQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [locationDenied, setLocationDenied] = useState(false);
+
+  useEffect(() => {
+    if (coords) sessionStorage.setItem("sp_coords", JSON.stringify(coords));
+  }, [coords]);
+  
+  useEffect(() => {
+    if (myCoords) sessionStorage.setItem("sp_myCoords", JSON.stringify(myCoords));
+  }, [myCoords]);
+
+  useEffect(() => {
+    sessionStorage.setItem("sp_isManual", String(isManualLocation));
+  }, [isManualLocation]);
+
+  useEffect(() => {
+    sessionStorage.setItem("sp_radius", String(radius));
+  }, [radius]);
 
   useEffect(() => {
     if (!navigator.geolocation) {
       setLocationDenied(true);
       return;
     }
+    
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const here = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setCoords(here);
         setMyCoords(here);
+        setCoords(prev => {
+          if (!prev || sessionStorage.getItem("sp_isManual") !== "true") {
+            return here;
+          }
+          return prev;
+        });
       },
       () => {
         setLocationDenied(true);
-        const fallback = { lat: 9.9312, lng: 76.2673 };
-        setCoords(fallback);
+        const fallback = { lat: 9.9312, lng: 76.2673 }; // Kochi fallback
         setMyCoords(fallback);
+        setCoords(prev => {
+          if (!prev || sessionStorage.getItem("sp_isManual") !== "true") {
+            return fallback;
+          }
+          return prev;
+        });
       }
     );
   }, []);
@@ -85,248 +130,309 @@ export default function CustomerHome() {
   function handleMapClick(lat, lng) {
     setCoords({ lat, lng });
     setIsManualLocation(true);
-    setQuery("");
   }
 
   function resetToMyLocation() {
     if (myCoords) {
       setCoords(myCoords);
       setIsManualLocation(false);
-      setQuery("");
     }
   }
 
-  const fetchNearbyShops = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!coords) return;
     setLoading(true);
     setError("");
     try {
-      const { data } = await apiClient.get("/shops/nearby", {
-        params: { lat: coords.lat, lng: coords.lng, radius },
-      });
-      setShops(data.shops || []);
-    } catch (err) {
-      setError("Could not load nearby shops. Is the backend running?");
-    } finally {
-      setLoading(false);
-    }
-  }, [coords, radius]);
-
-  useEffect(() => {
-    fetchNearbyShops();
-  }, [fetchNearbyShops]);
-
-  useEffect(() => {
-    if (shops.length === 0) return;
-    const ids = shops.map((s) => s.shop_id).join(",");
-    const interval = setInterval(async () => {
-      try {
-        const { data } = await apiClient.get("/shops/status", { params: { ids } });
-        setShops((prev) =>
-          prev.map((shop) => {
-            const updated = data.shops.find((s) => s.shop_id === shop.shop_id);
-            return updated ? { ...shop, current_status: updated.current_status } : shop;
-          })
-        );
-      } catch {
-        // silent
-      }
-    }, 25000);
-    return () => clearInterval(interval);
-  }, [shops.length, shops]);
-
-  async function handleProductSearch(e) {
-    e.preventDefault();
-    if (!query.trim() || !coords) return;
-    setLoading(true);
-    setError("");
-    try {
-      const { data } = await apiClient.get("/products/search", {
-        params: { q: query, lat: coords.lat, lng: coords.lng, radius },
-      });
-      const seen = new Map();
-      (data.results || []).forEach((r) => {
-        seen.set(r.shop_id, {
-          shop_id: r.shop_id,
-          name: r.shop_name,
-          address: r.address,
-          current_status: r.current_status,
-          distance_km: r.distance_km,
-          latitude: r.latitude,
-          longitude: r.longitude,
-          matched_product: { name: r.product_name, price: r.price, availability_status: r.availability_status },
+      if (urlQuery) {
+        const { data } = await apiClient.get("/products/search", {
+          params: { q: urlQuery, lat: coords.lat, lng: coords.lng, radius },
         });
-      });
-      setShops(Array.from(seen.values()));
+        setSearchResults(data.results || []);
+      } else {
+        const { data } = await apiClient.get("/shops/nearby", {
+          params: { lat: coords.lat, lng: coords.lng, radius },
+        });
+        setShops(data.shops || []);
+        setSearchResults([]);
+      }
     } catch (err) {
-      setError("Search failed. Try again.");
+      setError("Could not load data. Is the backend running?");
     } finally {
       setLoading(false);
     }
-  }
+  }, [coords, radius, urlQuery]);
 
-  function clearSearch() {
-    setQuery("");
-    fetchNearbyShops();
-  }
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const getMapShops = () => {
+    if (!urlQuery) return shops;
+    
+    const uniqueShops = new Map();
+    searchResults.forEach((p) => {
+      if (!uniqueShops.has(p.shop_id) && p.latitude && p.longitude) {
+        uniqueShops.set(p.shop_id, {
+          shop_id: p.shop_id,
+          name: p.shop_name,
+          current_status: p.current_status,
+          latitude: p.latitude,
+          longitude: p.longitude,
+        });
+      }
+    });
+    return Array.from(uniqueShops.values());
+  };
+
+  const mapShopsToRender = getMapShops();
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto px-5">
-      <h1 className="font-display font-semibold text-ink text-2xl mt-7">Find what's open nearby</h1>
-      <p className="text-ink-soft text-[13.5px]">Live status and stock from shops around you.</p>
-
-      {locationDenied && (
-        <div className="bg-coral-soft text-coral rounded-md px-3.5 py-2.5 text-[13.5px] mt-4">
-          Couldn't access your location, showing a default area instead. Enable location access for accurate results.
-        </div>
-      )}
-
-      {isManualLocation && (
-        <div className="bg-pulse-soft text-pulse rounded-md px-3.5 py-2.5 text-[13.5px] mt-4 flex justify-between items-center gap-3">
-          <span>Searching around a spot you picked on the map.</span>
-          <button
-            onClick={resetToMyLocation}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2 whitespace-nowrap"
-          >
-            Use my location instead
-          </button>
-        </div>
-      )}
-
-      <form onSubmit={handleProductSearch} className="flex gap-2.5 flex-wrap items-end my-6">
-        <div className="flex-1 min-w-[160px]">
-          <label htmlFor="q" className="block text-[13px] font-medium text-ink-soft mb-1.5">
-            Search for a product
-          </label>
-          <input
-            id="q"
-            placeholder="e.g. rice, paracetamol, notebooks"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
-          />
-        </div>
-        <div className="flex-none w-[140px]">
-          <label htmlFor="radius" className="block text-[13px] font-medium text-ink-soft mb-1.5">
-            Radius
-          </label>
-          <select
-            id="radius"
-            value={radius}
-            onChange={(e) => setRadius(Number(e.target.value))}
-            className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
-          >
-            <option value={1}>1 km</option>
-            <option value={3}>3 km</option>
-            <option value={5}>5 km</option>
-          </select>
-        </div>
-        <button
-          type="submit"
-          className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm cursor-pointer hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
-        >
-          Search
-        </button>
-        {query && (
-          <button
-            type="button"
-            onClick={clearSearch}
-            className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md border border-border bg-transparent text-ink font-semibold text-sm cursor-pointer hover:border-ink-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
-          >
-            Clear
-          </button>
-        )}
-      </form>
-
-      {error && <div className="bg-coral-soft text-coral rounded-md px-3.5 py-2.5 text-[13.5px] mb-4">{error}</div>}
-
-      <div className="grid grid-cols-1 min-[861px]:grid-cols-[380px_1fr] gap-5 items-start">
-        <div className="flex flex-col gap-3 max-h-[620px] overflow-y-auto pr-1">
-          {loading && <p className="text-ink-soft text-[13.5px]">Loading shops...</p>}
-          {!loading && shops.length === 0 && (
-            <div className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] text-center py-10 px-5 text-ink-soft">
-              No shops found in this radius yet. Try a wider radius.
+    <div className="w-full bg-bg min-h-screen">
+      <div className="max-w-[1600px] mx-auto px-4 md:px-6 pt-6 flex flex-col gap-6">
+        
+        {/* TOP TOOLBAR */}
+        <div className="bg-surface border border-border rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm">
+          {/* Location Picker */}
+          <div className="flex items-center gap-3 bg-bg rounded-xl px-4 py-2 border border-border">
+            <div className="w-8 h-8 rounded-full bg-pulse-soft flex items-center justify-center text-pulse shrink-0">
+              <Navigation size={16} className="fill-pulse" />
             </div>
-          )}
-          {shops.map((shop) => (
-            <div key={shop.shop_id} className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-4">
-              <div className="flex justify-between items-start gap-2">
-                <div>
-                  <div className="font-display font-semibold text-ink text-base">{shop.name}</div>
-                  <div className="text-ink-soft text-[13.5px]">{shop.address}</div>
-                </div>
-                <div className={`inline-flex items-center gap-[7px] font-mono text-[12.5px] whitespace-nowrap ${STATUS_TEXT[shop.current_status]}`}>
-                  <span className={`inline-block w-[9px] h-[9px] rounded-full ${STATUS_DOT[shop.current_status]}`}></span>
-                  {shop.current_status === "open" ? "Open now" : "Closed"}
-                </div>
+            <div 
+              className="flex flex-col cursor-pointer pr-4"
+              onClick={isManualLocation ? resetToMyLocation : undefined}
+              title={isManualLocation ? "Click to reset to your location" : ""}
+            >
+              <span className="text-[9px] text-ink-soft uppercase tracking-wider font-bold mb-0.5">Delivering to</span>
+              <div className="flex items-center gap-2">
+                <span className="text-ink font-semibold text-sm">
+                  {locationDenied ? "Default Location" : isManualLocation ? "Selected Area (Map)" : "Current Location"}
+                </span>
+                <ChevronDown size={14} className="text-ink-soft" />
               </div>
-
-              {shop.distance_km !== undefined && (
-                <p className="font-mono text-ink-soft text-[13.5px] mt-2 mb-2">
-                  {Number(shop.distance_km).toFixed(2)} km away
-                </p>
-              )}
-
-              {shop.matched_product && (
-                <div className="flex justify-between items-center py-2.5 mt-2 text-sm border-t border-border">
-                  <span>{shop.matched_product.name}</span>
-                  <span className="flex items-center gap-2">
-                    <span className="font-mono font-medium">₹{shop.matched_product.price}</span>
-                    <span
-                      className={`inline-block font-mono text-[11px] px-[9px] py-[3px] rounded-full uppercase tracking-wide ${
-                        BADGE_STYLES[shop.matched_product.availability_status]
-                      }`}
-                    >
-                      {shop.matched_product.availability_status.replace("_", " ")}
-                    </span>
-                  </span>
-                </div>
-              )}
-
-              <button
-                onClick={() => navigate(`/shops/${shop.shop_id}`)}
-                className="mt-3 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-transparent text-ink font-semibold text-[13px] cursor-pointer hover:border-ink-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
-              >
-                View shop
-              </button>
             </div>
-          ))}
+          </div>
+
+          {/* Radius Slider */}
+          <div className="flex items-center gap-4 w-full md:w-[400px] pr-2">
+            <div className="w-full">
+               <input 
+                 type="range" min="1" max="10" step="1" 
+                 value={radius} onChange={e => setRadius(Number(e.target.value))}
+                 className="w-full h-1 bg-border rounded-lg appearance-none cursor-pointer accent-pulse" 
+               />
+               <div className="flex justify-between text-[10px] text-ink-soft font-bold mt-2 px-1">
+                 <span>&lt; 2 km</span>
+                 <span>&lt; 5 km</span>
+                 <span>&lt; 10 km</span>
+               </div>
+            </div>
+          </div>
         </div>
 
-        <div className="relative w-full rounded-2xl overflow-hidden border border-border h-[420px] sm:h-[500px] min-[861px]:h-[620px] [&_.leaflet-container]:h-full [&_.leaflet-container]:w-full [&_.leaflet-container]:rounded-2xl">
-          <span className="absolute top-2 left-2 z-[1000] bg-white/95 px-2.5 py-1 rounded-full text-xs text-ink-soft shadow-[0_1px_2px_rgba(28,28,30,0.06)]">
-            Click the map to search a different area
-          </span>
-          {coords && (
-            <MapContainer center={[coords.lat, coords.lng]} zoom={14} style={{ height: "100%", width: "100%" }}>
-              <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              <RecenterMap lat={coords.lat} lng={coords.lng} />
-              <ClickToSearchHandler onPick={handleMapClick} />
-              <Marker position={[coords.lat, coords.lng]} icon={searchCenterIcon}>
-                <Tooltip permanent direction="top" offset={[0, -30]} className="you-are-here-tooltip">
-                  {isManualLocation ? "Searching from here" : "You are here"}
-                </Tooltip>
-                <Popup>{isManualLocation ? "Searching from here" : "You are here"}</Popup>
-              </Marker>
-              {shops.map(
-                (shop) =>
-                  shop.latitude &&
-                  shop.longitude && (
-                    <Marker
+        {/* FILTER BAR */}
+        <div 
+          className="flex items-center gap-3 overflow-x-auto pb-2" 
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          <style dangerouslySetInnerHTML={{__html: `::-webkit-scrollbar { display: none; }`}} />
+          <button className="flex items-center gap-2 bg-surface border border-border text-ink text-sm px-4 py-2 rounded-full shadow-sm hover:border-pulse transition-colors font-medium">
+            <Clock size={14} className="text-pulse" /> Open Now
+          </button>
+          <button className="flex items-center gap-2 bg-surface border border-border text-ink text-sm px-4 py-2 rounded-full shadow-sm hover:border-pulse transition-colors font-medium">
+            Nearest First <ChevronDown size={14} className="text-ink-soft" />
+          </button>
+          <button className="flex items-center gap-2 bg-surface border border-border text-ink text-sm px-4 py-2 rounded-full shadow-sm hover:border-pulse transition-colors font-medium">
+            Ratings <ChevronDown size={14} className="text-ink-soft" />
+          </button>
+          <button className="flex items-center gap-2 bg-surface border border-border text-ink text-sm px-4 py-2 rounded-full shadow-sm hover:border-pulse transition-colors font-medium">
+            Bakery <ChevronDown size={14} className="text-ink-soft" />
+          </button>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex flex-col lg:flex-row gap-6 pb-12">
+          
+          {/* LEFT COLUMN: Shops List */}
+          <div 
+            className="w-full lg:w-[420px] flex flex-col gap-4 shrink-0 lg:h-[75vh] overflow-y-auto pr-2"
+            style={{ scrollbarWidth: 'thin' }}
+          >
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="font-display font-bold text-xl text-ink">
+                {urlQuery ? `Results for "${urlQuery}"` : "Shops"}
+              </h2>
+              {urlQuery && (
+                <button onClick={() => setSearchParams({})} className="text-xs font-bold text-pulse hover:text-emerald-700">
+                  Clear Search
+                </button>
+              )}
+            </div>
+            
+            {error && (
+              <div className="bg-coral-soft text-coral border border-coral/20 rounded-xl px-4 py-3 text-sm font-medium">
+                {error}
+              </div>
+            )}
+
+            {loading ? (
+              <div className="bg-surface border border-border rounded-2xl py-20 flex flex-col items-center justify-center text-ink-soft">
+                <div className="w-8 h-8 border-4 border-border border-t-pulse rounded-full animate-spin mb-4"></div>
+                <p className="font-semibold text-sm">Searching...</p>
+              </div>
+            ) : urlQuery ? (
+              /* PRODUCT RESULTS */
+              searchResults.length === 0 ? (
+                <div className="bg-surface border border-border rounded-2xl py-16 text-center shadow-sm">
+                  <Search size={40} className="text-ink-soft/30 mx-auto mb-4" />
+                  <p className="text-ink font-semibold">No products found</p>
+                  <p className="text-ink-soft text-sm mt-1">Try expanding your search radius.</p>
+                </div>
+              ) : (
+                searchResults.map((product) => {
+                  const isOut = product.availability_status === 'out_of_stock';
+                  return (
+                    <div key={product.product_id} className="bg-surface border border-border rounded-2xl p-5 hover:border-pulse/30 transition-colors shadow-sm flex flex-col gap-3 group">
+                      <div className="flex justify-between items-start gap-2">
+                        <h3 className="font-semibold text-ink text-sm leading-tight line-clamp-2">
+                          {product.product_name}
+                        </h3>
+                        {isOut ? (
+                          <span className="shrink-0 bg-coral-soft text-coral text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">Out</span>
+                        ) : (
+                          <span className="shrink-0 font-bold text-ink text-sm">₹{product.price}</span>
+                        )}
+                      </div>
+                      
+                      <div className="mt-auto pt-3 border-t border-border/50">
+                        <div className="flex items-center gap-1.5 text-ink-soft text-xs font-medium mb-3 truncate">
+                          <Store size={12} className="text-pulse/70" /> {product.shop_name} • {Number(product.distance_km).toFixed(1)} km away
+                        </div>
+                        <div className="flex justify-end">
+                          <button 
+                            onClick={() => navigate(`/shops/${product.shop_id}`)}
+                            className="bg-pulse-soft hover:bg-pulse/20 text-pulse px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+                          >
+                            <LayoutGrid size={14} /> View Shop
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })
+              )
+            ) : (
+              /* SHOP RESULTS */
+              shops.length === 0 ? (
+                <div className="bg-surface border border-border rounded-2xl py-16 text-center shadow-sm">
+                  <Store size={40} className="text-ink-soft/30 mx-auto mb-4" />
+                  <p className="text-ink font-semibold">No shops found</p>
+                  <p className="text-ink-soft text-sm mt-1">Click anywhere on the map to change your location.</p>
+                </div>
+              ) : (
+                shops.map((shop) => (
+                  <div key={shop.shop_id} className="bg-surface border border-border rounded-2xl p-5 hover:border-pulse/30 transition-colors cursor-pointer group shadow-sm flex flex-col gap-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex flex-col gap-1.5 items-start">
+                        <h3 className="font-display font-bold text-lg text-ink leading-none">{shop.name}</h3>
+                        {shop.business_category && (
+                          <span className="bg-bg text-ink-soft text-[10px] font-bold px-2 py-0.5 rounded-full border border-border flex items-center gap-1">
+                            {shop.business_category.includes('Grocery') ? '🥦' : shop.business_category.includes('Electronics') ? '⚡' : shop.business_category.includes('Bakery') ? '🥐' : '🏪'} {shop.business_category}
+                          </span>
+                        )}
+                      </div>
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${shop.current_status === 'open' ? 'border-pulse/20 text-pulse bg-pulse-soft' : 'border-coral/20 text-coral bg-coral-soft'}`}>
+                        <span className={`inline-block w-1.5 h-1.5 rounded-full ${shop.current_status === 'open' ? 'bg-pulse animate-pulse-beat' : 'bg-coral'}`}></span>
+                        {shop.current_status}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-1.5 text-ink-soft text-xs font-medium">
+                      <MapPin size={12} className="text-pulse/70" /> {Number(shop.distance_km).toFixed(1)} km away
+                    </div>
+
+                    <div className="flex items-center justify-between mt-2 pt-3 border-t border-border/50">
+                      <div className="flex items-center gap-1">
+                        <Star size={14} className="fill-amber text-amber" />
+                        <span className="text-ink font-bold text-sm">{Number(shop.average_rating || 0).toFixed(1)}</span>
+                        <span className="text-ink-soft text-xs">({shop.review_count || 0} reviews)</span>
+                      </div>
+                      <button 
+                        onClick={() => navigate(`/shops/${shop.shop_id}`)}
+                        className="bg-pulse text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-lg shadow-pulse/20 hover:bg-emerald-500"
+                      >
+                        <LayoutGrid size={14} /> Browse Shop
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )
+            )}
+          </div>
+
+          {/* RIGHT COLUMN: Interactive Map */}
+          <div className="flex-1 lg:h-[75vh] min-h-[400px] rounded-[24px] overflow-hidden border border-border relative bg-surface shadow-sm">
+            {!coords ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface z-10">
+                <div className="w-12 h-12 bg-pulse-soft rounded-full flex items-center justify-center mb-4">
+                  <MapPin size={24} className="text-pulse animate-bounce" />
+                </div>
+                <p className="font-medium text-ink-soft">Acquiring location...</p>
+              </div>
+            ) : (
+              <MapContainer center={[coords.lat, coords.lng]} zoom={13} style={{ height: "100%", width: "100%" }} className="z-0 [&_.leaflet-container]:rounded-[24px]">
+                <TileLayer 
+                  attribution='&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors' 
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+                />
+                <RecenterMap lat={coords.lat} lng={coords.lng} />
+                <ClickToSearchHandler onPick={handleMapClick} />
+                
+                {/* Center marker */}
+                <Marker position={[coords.lat, coords.lng]} icon={searchCenterIcon}>
+                  <Popup>
+                    <div className="text-center font-body text-ink font-bold">Your Delivery Center</div>
+                  </Popup>
+                </Marker>
+                
+                {/* Shop markers */}
+                {mapShopsToRender.map(shop => {
+                  if (!shop.latitude || !shop.longitude) return null;
+                  return (
+                    <Marker 
                       key={shop.shop_id}
                       position={[parseFloat(shop.latitude), parseFloat(shop.longitude)]}
-                      icon={shop.current_status === "open" ? openIcon : closedIcon}
+                      icon={createGlowingIcon(shop.current_status === "open")}
                     >
                       <Popup>
-                        <strong>{shop.name}</strong>
-                        <br />
-                        {shop.current_status === "open" ? "Open now" : "Closed"}
+                        <div className="text-center font-body">
+                          <strong className="block text-[14px] text-ink mb-1">{shop.name}</strong>
+                          <span className={`inline-flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${shop.current_status === 'open' ? 'bg-pulse-soft text-pulse' : 'bg-coral-soft text-coral'}`}>
+                            <span className={`inline-block w-1.5 h-1.5 rounded-full ${shop.current_status === 'open' ? 'bg-pulse animate-pulse-beat' : 'bg-coral'}`}></span>
+                            {shop.current_status}
+                          </span>
+                          <br/>
+                          <button 
+                            onClick={() => navigate(`/shops/${shop.shop_id}`)}
+                            className="mt-3 text-xs font-bold text-pulse hover:underline w-full"
+                          >
+                            View Shop
+                          </button>
+                        </div>
                       </Popup>
                     </Marker>
-                  )
-              )}
-            </MapContainer>
-          )}
+                  );
+                })}
+              </MapContainer>
+            )}
+            
+            {/* Map Overlay helper text */}
+            <div className="absolute bottom-4 left-4 right-4 z-[400] pointer-events-none flex justify-center">
+              <div className="bg-bg/90 border border-border backdrop-blur text-ink text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full shadow-lg">
+                Click anywhere to change location
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

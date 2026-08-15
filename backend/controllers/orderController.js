@@ -19,15 +19,21 @@ async function placeOrder(req, res) {
   });
 }
 
-// Check whether the shop is open
+// Check whether the shop is open and verified
 const [shopRows] = await db.query(
-  "SELECT shop_id, current_status FROM shops WHERE shop_id = ?",
+  "SELECT shop_id, current_status, is_verified FROM shops WHERE shop_id = ?",
   [shop_id]
 );
 
 if (shopRows.length === 0) {
   return res.status(404).json({
     message: "Shop not found."
+  });
+}
+
+if (!shopRows[0].is_verified) {
+  return res.status(400).json({
+    message: "This shop has not been verified yet and cannot accept orders."
   });
 }
 

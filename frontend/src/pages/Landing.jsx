@@ -57,15 +57,17 @@ function HeroMap() {
 
   if (!coords) {
     return (
-      <div className="relative bg-slate-soft rounded-2xl h-[280px] flex flex-col items-center justify-center text-center overflow-hidden">
-        <MapPin size={40} strokeWidth={1.5} color="#4F46E5" />
-        <p className="font-mono text-ink-soft text-[13.5px] mt-3">Locating you...</p>
+      <div className="relative bg-surface rounded-[24px] h-[340px] md:h-[380px] w-full flex flex-col items-center justify-center text-center overflow-hidden border border-border shadow-lg shadow-black/5">
+        <div className="w-12 h-12 bg-pulse-soft rounded-full flex items-center justify-center mb-4">
+          <MapPin size={24} strokeWidth={2} className="text-pulse animate-bounce" />
+        </div>
+        <p className="font-mono text-ink-soft font-medium text-[14px]">Acquiring live location...</p>
       </div>
     );
   }
 
   return (
-    <div className="relative bg-slate-soft rounded-2xl h-[280px] overflow-hidden [&_.leaflet-container]:rounded-2xl">
+    <div className="relative bg-surface rounded-[24px] h-[340px] md:h-[380px] w-full overflow-hidden border border-border shadow-lg shadow-black/5 [&_.leaflet-container]:rounded-[24px]">
       <MapContainer center={[coords.lat, coords.lng]} zoom={13} style={{ height: "100%", width: "100%" }} scrollWheelZoom={false}>
         <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         {shops.map(
@@ -78,17 +80,22 @@ function HeroMap() {
                 icon={shop.current_status === "open" ? openIcon : closedIcon}
               >
                 <Popup>
-                  <strong>{shop.name}</strong>
-                  <br />
-                  {shop.current_status === "open" ? "Open now" : "Closed"}
+                  <div className="text-center font-sans">
+                    <strong className="block text-[14px] text-ink mb-1">{shop.name}</strong>
+                    <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${shop.current_status === 'open' ? 'bg-pulse-soft text-pulse' : 'bg-coral-soft text-coral'}`}>
+                      {shop.current_status === "open" ? "Open now" : "Closed"}
+                    </span>
+                  </div>
                 </Popup>
               </Marker>
             )
         )}
       </MapContainer>
       {shops.length === 0 && (
-        <div className="absolute bottom-3 left-3 right-3 bg-white/95 rounded-md px-3 py-2 text-xs text-ink-soft text-left z-[1000] pointer-events-none">
-          No registered shops near you yet — be the first!
+        <div className="absolute bottom-4 left-4 right-4 flex justify-center z-[1000] pointer-events-none">
+          <div className="bg-ink/90 backdrop-blur text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg">
+            No registered shops near you yet — be the first!
+          </div>
         </div>
       )}
     </div>
@@ -97,35 +104,37 @@ function HeroMap() {
 
 export default function Landing() {
   return (
-    <div>
-      <div className="max-w-[1100px] mx-auto px-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-[50px] items-center py-9 md:py-[60px]">
-          <div>
-            <h1 className="font-display font-semibold text-ink text-[32px] md:text-[42px] leading-[1.1]">
+    <div className="min-h-screen bg-bg">
+      <div className="max-w-[1200px] mx-auto px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[40px] lg:gap-[60px] items-center py-12 md:py-[80px]">
+          <div className="flex flex-col items-start text-left">
+            <h1 className="font-display font-bold text-ink text-[40px] md:text-[52px] leading-[1.1] tracking-tight">
               Discover nearby shops, live.
             </h1>
-            <p className="text-ink-soft text-base mt-3.5 mb-6 max-w-[440px]">
+            <p className="text-ink-soft text-[17px] md:text-[19px] mt-6 mb-8 max-w-[480px] leading-relaxed">
               Shop-Pulse connects you with local shops in real time — check who's open,
               what's in stock, and order in a few taps. Built for independent shops,
               not warehouses.
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-4">
               <Link
                 to="/register"
-                className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
+                className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-pulse text-white font-bold text-[15px] hover:bg-emerald-600 transition-all hover:-translate-y-0.5 hover:shadow-lg shadow-pulse/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pulse focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
               >
                 Get started
               </Link>
               <a
                 href="#features"
-                className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md border border-border bg-transparent text-ink font-semibold text-sm hover:border-ink-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
+                className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-surface border border-border text-ink font-bold text-[15px] hover:border-pulse hover:text-pulse transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pulse focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
               >
                 Learn more
               </a>
             </div>
           </div>
 
-          <HeroMap />
+          <div className="w-full">
+            <HeroMap />
+          </div>
         </div>
       </div>
 
@@ -136,9 +145,9 @@ export default function Landing() {
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {FEATURES.map(({ icon: Icon, title, description }) => (
-            <div key={title} className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-[22px]">
-              <Icon size={26} strokeWidth={1.6} color="#4F46E5" />
-              <h3 className="text-base text-ink mt-3.5 mb-1.5">{title}</h3>
+            <div key={title} className="bg-surface border border-border rounded-2xl shadow-sm hover:shadow-md transition-shadow p-[24px]">
+              <Icon size={32} strokeWidth={1.6} className="text-pulse" />
+              <h3 className="text-[17px] font-bold text-ink mt-4 mb-2">{title}</h3>
               <p className="text-ink-soft text-[13.5px]">{description}</p>
             </div>
           ))}
@@ -152,7 +161,7 @@ export default function Landing() {
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {AUDIENCES.map((a) => (
-            <div key={a.title} className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-6">
+            <div key={a.title} className="card">
               <h3 className="text-base text-ink mb-3.5">{a.title}</h3>
               <ul className="list-none p-0 m-0">
                 {a.items.map((item) => (
@@ -167,14 +176,14 @@ export default function Landing() {
         </div>
       </div>
 
-      <div className="bg-slate py-14 px-5 text-center mt-[70px]">
-        <h2 className="text-white text-[26px] font-display font-semibold">Ready to find what's open?</h2>
-        <p className="text-white/85 mt-2 mb-[22px]">
+      <div className="bg-pulse py-16 px-5 text-center mt-[70px] mx-4 rounded-[32px] mb-8 shadow-xl shadow-pulse/10 max-w-[1200px] xl:mx-auto">
+        <h2 className="text-white text-[32px] font-display font-bold">Ready to find what's open?</h2>
+        <p className="text-white/90 text-lg mt-3 mb-[28px] max-w-lg mx-auto">
           Join Shop-Pulse and discover the shops around you today.
         </p>
         <Link
           to="/register"
-          className="inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-white text-slate font-semibold text-sm hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2"
+          className="inline-flex items-center justify-center gap-1.5 px-8 py-3.5 rounded-xl bg-white text-pulse font-bold text-[15px] hover:scale-105 hover:shadow-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-pulse"
         >
           Sign up now
         </Link>

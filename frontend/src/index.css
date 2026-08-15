@@ -8,30 +8,72 @@
   --color-ink: #0F172A;
   --color-ink-soft: #64748B;
   --color-border: #E2E8F0;
-  --color-pulse: #10B981;
-  --color-pulse-soft: #ECFDF5;
+  
+  /* Vibrant fresh green for grocery/marketplace feel */
+  --color-pulse: #059669; 
+  --color-pulse-soft: #D1FAE5;
+  
   --color-coral: #EF4444;
-  --color-coral-soft: #FEF2F2;
-  --color-amber: #F97316;
-  --color-amber-soft: #FFF7ED;
-  --color-slate: #4F46E5;
-  --color-slate-soft: #EEF2FF;
+  --color-coral-soft: #FEE2E2;
+  
+  --color-amber: #F59E0B;
+  --color-amber-soft: #FEF3C7;
+  
+  --color-slate: #2563EB; /* Blue for admin/secondary */
+  --color-slate-soft: #DBEAFE;
 }
 
 .dark {
   --color-bg: #0F172A;
   --color-surface: #1E293B;
-  --color-ink: #F1F5F9;
+  --color-ink: #F8FAFC;
   --color-ink-soft: #94A3B8;
   --color-border: #334155;
-  --color-pulse: #34D399;
+  
+  --color-pulse: #10B981;
   --color-pulse-soft: rgba(16, 185, 129, 0.15);
+  
   --color-coral: #F87171;
   --color-coral-soft: rgba(239, 68, 68, 0.15);
-  --color-amber: #FB923C;
-  --color-amber-soft: rgba(249, 115, 22, 0.15);
-  --color-slate: #6366F1;
-  --color-slate-soft: rgba(79, 70, 229, 0.18);
+  
+  --color-amber: #FBBF24;
+  --color-amber-soft: rgba(245, 158, 11, 0.15);
+  
+  --color-slate: #3B82F6;
+  --color-slate-soft: rgba(59, 130, 246, 0.18);
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-pulse text-white font-semibold text-sm cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_14px_rgba(5,150,105,0.3)] active:translate-y-0 disabled:opacity-55 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-surface text-ink font-semibold text-sm cursor-pointer transition-all duration-200 hover:border-pulse hover:bg-pulse-soft hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 disabled:opacity-55 disabled:cursor-not-allowed disabled:hover:translate-y-0;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-coral text-white font-semibold text-sm cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_14px_rgba(248,113,113,0.3)] active:translate-y-0 disabled:opacity-55 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none;
+  }
+  .btn-success {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-pulse text-white font-semibold text-sm cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_14px_rgba(5,150,105,0.3)] active:translate-y-0 disabled:opacity-55 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none;
+  }
+  .input-field {
+    @apply w-full px-4 py-3 border border-border rounded-xl bg-surface text-ink transition-all duration-200 focus:border-pulse focus:outline-none focus:ring-[3px] focus:ring-pulse-soft shadow-sm placeholder:text-ink-soft placeholder:opacity-60;
+  }
+  .card {
+    @apply bg-surface border border-border rounded-2xl shadow-sm hover:shadow-md transition-shadow p-6;
+  }
+  .product-card {
+    @apply bg-surface border border-border rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col;
+  }
+  .badge-pulse {
+    @apply inline-block font-mono font-bold text-[11px] px-2.5 py-1 rounded-full uppercase tracking-wider bg-pulse-soft text-pulse;
+  }
+  .badge-coral {
+    @apply inline-block font-mono font-bold text-[11px] px-2.5 py-1 rounded-full uppercase tracking-wider bg-coral-soft text-coral;
+  }
+  .badge-amber {
+    @apply inline-block font-mono font-bold text-[11px] px-2.5 py-1 rounded-full uppercase tracking-wider bg-amber-soft text-amber;
+  }
 }
 
 body {

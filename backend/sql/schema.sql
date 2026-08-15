@@ -31,6 +31,10 @@ current_status ENUM('open', 'closed') DEFAULT 'closed',
 is_manually_overridden BOOLEAN DEFAULT FALSE,
 manual_override_date DATE NULL,
 is_verified BOOLEAN DEFAULT FALSE,
+verification_status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+verification_reason VARCHAR(500) NULL,
+verified_at DATETIME NULL,
+document_url VARCHAR(255) NULL,
 last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (owner_id) REFERENCES users(user_id) ON DELETE CASCADE,
@@ -41,10 +45,16 @@ CREATE TABLE IF NOT EXISTS products (
     product_id INT AUTO_INCREMENT PRIMARY KEY,
     shop_id INT NOT NULL,
     name VARCHAR(150) NOT NULL,
+    description VARCHAR(500) NULL,
+    brand VARCHAR(100) NULL,
+    sku VARCHAR(50) NULL,
+    unit VARCHAR(30) NULL,
     price DECIMAL(10, 2) NOT NULL,
+    mrp DECIMAL(10, 2) NULL,
     availability_status ENUM('available', 'out_of_stock', 'few_left') DEFAULT 'available',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (shop_id) REFERENCES shops(shop_id) ON DELETE CASCADE
+    FOREIGN KEY (shop_id) REFERENCES shops(shop_id) ON DELETE CASCADE,
+    UNIQUE INDEX uq_shop_sku (shop_id, sku)
 );
 
 CREATE TABLE IF NOT EXISTS orders (

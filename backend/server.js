@@ -2,6 +2,15 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
+const fs = require("fs");
+const path = require("path");
+
+// Ensure uploads directory exists on startup.
+const uploadsDir = path.join(__dirname, "uploads", "documents");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 const authRoutes = require("./routes/authRoutes");
 const shopRoutes = require("./routes/shopRoutes");
 const productRoutes = require("./routes/productRoutes");

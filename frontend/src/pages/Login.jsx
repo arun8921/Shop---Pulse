@@ -27,23 +27,30 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-5">
-      <div className="w-full max-w-[380px] bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-6">
-        <h1 className="font-display font-semibold text-ink text-[28px] leading-tight tracking-[-0.01em] mb-1">
+    <div className="min-h-screen flex items-center justify-center bg-bg p-5">
+      <div className="w-full max-w-[420px] bg-surface rounded-[20px] shadow-sm border border-border p-8 sm:p-10">
+        <div className="flex items-center gap-2 mb-8 font-display font-bold text-[22px] text-ink">
+          <div className="w-[34px] h-[34px] rounded-xl bg-pulse flex items-center justify-center shadow-md shadow-pulse/20">
+            <span className="w-3 h-3 rounded-full bg-white animate-pulse-beat" aria-hidden="true"></span>
+          </div>
+          Shop-Pulse
+        </div>
+
+        <h1 className="font-display font-bold text-ink text-[32px] leading-tight mb-2">
           Welcome back
         </h1>
-        <p className="text-ink-soft text-[13.5px] mb-5">Log in to Shop-Pulse</p>
+        <p className="text-ink-soft text-[15px] mb-8">Sign in to continue your curated shopping experience.</p>
 
         {error && (
-          <div className="bg-coral-soft text-coral rounded-md px-3.5 py-2.5 text-[13.5px] mb-4">
+          <div className="bg-coral-soft text-coral rounded-lg px-4 py-3 text-[13.5px] mb-6">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-[13px] font-medium text-ink-soft mb-1.5">
-              Email
+          <div className="mb-5">
+            <label htmlFor="email" className="block text-[13px] font-medium text-ink mb-1.5">
+              Email Address
             </label>
             <input
               id="email"
@@ -52,14 +59,20 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoFocus
-              className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
+              placeholder="name@example.com"
+              className="input-field"
             />
           </div>
 
-          <div className="mb-4">
-             <label htmlFor="password" className="block text-[13px] font-medium text-ink-soft">
-                Password
-              </label>
+          <div className="mb-6">
+             <div className="flex justify-between items-center mb-1.5">
+               <label htmlFor="password" className="block text-[13px] font-medium text-ink">
+                  Password
+                </label>
+               <Link to="/forgot-password" className="text-[13px] text-pulse font-semibold hover:text-emerald-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pulse rounded-sm">
+                 Forgot Password?
+               </Link>
+             </div>
             
             <input
               id="password"
@@ -67,26 +80,24 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
+              placeholder="••••••••••••"
+              className="input-field"
             />
-              <Link to="/forgot-password" className="text-[12.5px] text-slate font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2 rounded-sm">
-                Forgot password?
-              </Link>
           </div>
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full inline-flex items-center justify-center gap-1.5 px-[18px] py-2.5 rounded-md bg-slate text-white font-semibold text-sm cursor-pointer transition hover:opacity-90 active:scale-[0.98] disabled:opacity-55 disabled:cursor-not-allowed"
+            className="w-full btn-primary py-3 text-[15px]"
           >
-            {submitting ? "Logging in..." : "Log in"}
+            {submitting ? "Signing in..." : "Sign In"}
           </button>
         </form>
 
-        <p className="text-ink-soft text-[13.5px] mt-4 text-center">
+        <p className="text-ink-soft text-[14px] mt-8 text-center">
           Don't have an account?{" "}
-          <Link to="/register" className="text-slate font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate focus-visible:ring-offset-2 rounded-sm">
-            Sign up
+          <Link to="/register" className="text-pulse font-bold hover:text-emerald-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pulse rounded-sm transition-colors">
+            Sign Up
           </Link>
         </p>
       </div>

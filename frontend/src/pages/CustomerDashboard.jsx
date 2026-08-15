@@ -105,7 +105,7 @@ export default function CustomerDashboard() {
 
   return (
     <main className="max-w-[1100px] mx-auto px-5 pb-[60px]">
-      <section className="flex justify-between items-start flex-wrap gap-5 bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-6 mt-7 mb-6">
+      <section className="card flex justify-between items-start flex-wrap gap-5 mt-7 mb-6">
         <div>
           <span className="block font-mono text-[11px] uppercase tracking-wide text-ink-soft mb-1.5">
             Customer workspace
@@ -158,7 +158,7 @@ export default function CustomerDashboard() {
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <article className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-6">
+        <article className="card">
           <div className="flex justify-between items-start gap-3 mb-4">
             <div>
               <span className="block font-mono text-[11px] uppercase tracking-wide text-ink-soft mb-1.5">
@@ -225,7 +225,7 @@ export default function CustomerDashboard() {
           )}
         </article>
 
-        <article className="bg-surface border border-border rounded-2xl shadow-[0_1px_2px_rgba(28,28,30,0.06)] p-6">
+        <article className="card">
           <div className="flex justify-between items-start gap-3 mb-4">
             <div>
               <span className="block font-mono text-[11px] uppercase tracking-wide text-ink-soft mb-1.5">
@@ -273,7 +273,7 @@ export default function CustomerDashboard() {
                   onChange={(event) => setProfileForm((prev) => ({ ...prev, name: event.target.value }))}
                   required
                   maxLength={100}
-                  className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
+                  className="input-field"
                 />
               </div>
               <div className="mb-4">
@@ -287,7 +287,7 @@ export default function CustomerDashboard() {
                   onChange={(event) => setProfileForm((prev) => ({ ...prev, phone: event.target.value }))}
                   maxLength={20}
                   placeholder="Optional"
-                  className="w-full px-3 py-2.5 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
+                  className="input-field"
                 />
               </div>
               {profileMessage && (

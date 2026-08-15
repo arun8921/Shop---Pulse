@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import Navbar from "./components/Navbar";
+import Sidebar from "./components/Sidebar";
 import PrivateRoute from "./components/PrivateRoute";
 
 import Landing from "./pages/Landing";
@@ -36,47 +37,66 @@ function RoleDashboard() {
 }
 
 export default function App() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <ThemeProvider>
     <AuthProvider>
       <BrowserRouter>
-        <div className="min-h-screen flex flex-col">
-          <Navbar />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/discover" element={<CustomerHome />} />
-            <Route path="/shops/:shopId" element={<ShopDetail />} />
-            <Route
-              path="/my-orders"
-              element={
-                <PrivateRoute allowedRoles={["customer"]}>
-                  <MyOrders />
-                </PrivateRoute>
-              }
-            />
-            <Route path="/login" element={<Login />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<PrivateRoute><RoleDashboard /></PrivateRoute>} />
-            <Route
-              path="/owner/dashboard"
-              element={
-                <PrivateRoute allowedRoles={["owner"]}>
-                  <OwnerDashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <PrivateRoute allowedRoles={["admin"]}>
-                  <AdminPanel />
-                </PrivateRoute>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+        <div className="h-screen flex flex-col overflow-hidden bg-bg w-full relative">
+          <Navbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+          <div className="flex flex-1 overflow-hidden min-h-0 relative">
+            <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+            <main className="flex-1 overflow-y-auto relative w-full">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/discover" element={<CustomerHome />} />
+                <Route path="/shops/:shopId" element={<ShopDetail />} />
+                <Route
+                  path="/my-orders"
+                  element={
+                    <PrivateRoute allowedRoles={["customer"]}>
+                      <MyOrders />
+                    </PrivateRoute>
+                  }
+                />
+                <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/dashboard" element={<PrivateRoute><RoleDashboard /></PrivateRoute>} />
+                <Route
+                  path="/owner/dashboard"
+                  element={
+                    <PrivateRoute allowedRoles={["owner"]}>
+                      <OwnerDashboard />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/admin"
+                  element={
+                    <PrivateRoute allowedRoles={["admin"]}>
+                      <AdminPanel />
+                    </PrivateRoute>
+                  }
+                />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+          </div>
         </div>
       </BrowserRouter>
     </AuthProvider>

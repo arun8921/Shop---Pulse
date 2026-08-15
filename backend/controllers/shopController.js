@@ -1,4 +1,7 @@
 const db = require("../config/db");
+const fs = require("fs");
+const path = require("path");
+const { UPLOAD_DIR } = require("../middleware/upload");
 const {
   ValidationError,
   ensureOnlyFields,
@@ -18,6 +21,8 @@ const {
 const SHOP_WRITE_FIELDS = [
   "name",
   "category_id",
+  "business_category",
+  "business_sub_category",
   "address",
   "latitude",
   "longitude",
@@ -50,10 +55,12 @@ const SHOP_SUMMARY_JOINS = `
 
 function summarizeShopFields() {
   return `
-    s.shop_id, s.name, s.category_id, c.name AS category_name, s.address,
+    s.shop_id, s.name, s.category_id, c.name AS category_name, s.business_category, s.business_sub_category, s.address,
     s.latitude, s.longitude, s.contact_number,
     s.default_open_time, s.default_close_time,
     s.current_status, s.is_manually_overridden, s.is_verified,
+    s.verification_status, s.verification_reason, s.verified_at,
+    s.document_url,
     s.last_updated, s.created_at,
     COALESCE(ps.product_count, 0) AS product_count,
     COALESCE(ps.available_product_count, 0) AS available_product_count,
@@ -74,7 +81,8 @@ async function ensureCategoryExists(categoryId) {
 
 async function getOwnedShop(shopId, ownerId) {
   const [rows] = await db.query(
-    `SELECT shop_id, owner_id, default_open_time, default_close_time
+    `SELECT shop_id, owner_id, default_open_time, default_close_time,
+            verification_status, document_url
      FROM shops
      WHERE shop_id = ?`,
     [shopId]
@@ -88,32 +96,59 @@ async function getOwnedShop(shopId, ownerId) {
   return rows[0];
 }
 
+/**
+ * Like getOwnedShop but also requires the shop to be approved.
+ * Used to gate management operations behind admin verification.
+ */
+async function getOwnedVerifiedShop(shopId, ownerId) {
+  const shop = await getOwnedShop(shopId, ownerId);
+  if (shop.verification_status !== "approved") {
+    throw new ValidationError(
+      "This shop has not been verified yet. Please wait for admin approval.",
+      403
+    );
+  }
+  return shop;
+}
+
 function validateHours(openTime, closeTime) {
   if (timeToSeconds(openTime) >= timeToSeconds(closeTime)) {
     throw new ValidationError("Closing time must be later than opening time.");
   }
 }
+/**
+ * Returns the current date string in IST (YYYY-MM-DD).
+ */
+function getTodayIST() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+/**
+ * Returns the current time in IST as total seconds since midnight.
+ */
+function getCurrentISTSeconds() {
+  const parts = new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date());
+
+  const hour = Number(parts.find((part) => part.type === "hour").value);
+  const minute = Number(parts.find((part) => part.type === "minute").value);
+  const second = Number(parts.find((part) => part.type === "second").value);
+
+  return hour * 3600 + minute * 60 + second;
+}
+
 function getAutomaticShopStatus(openTime, closeTime) {
-    const now = new Date();
-
-    // Always calculate shop time using IST
-    const parts = new Intl.DateTimeFormat("en-IN", {
-        timeZone: "Asia/Kolkata",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hourCycle: "h23",
-    }).formatToParts(now);
-
-    const hour = Number(parts.find((part) => part.type === "hour").value);
-    const minute = Number(parts.find((part) => part.type === "minute").value);
-    const second = Number(parts.find((part) => part.type === "second").value);
-
-    const currentSeconds =
-        hour * 3600 +
-        minute * 60 +
-        second;
-
+    const currentSeconds = getCurrentISTSeconds();
     const openSeconds = timeToSeconds(openTime);
     const closeSeconds = timeToSeconds(closeTime);
 
@@ -121,15 +156,60 @@ function getAutomaticShopStatus(openTime, closeTime) {
         ? "open"
         : "closed";
 }
+
+/**
+ * Determines whether a manual override should be cleared based on the
+ * override type and the shop's schedule.
+ *
+ * Manual CLOSE:  persists until the NEXT scheduled opening time is reached.
+ *                This means it survives the 30-second sync and even crosses
+ *                midnight.  It is cleared when:
+ *                  - the override was set on a PREVIOUS day (in IST) AND
+ *                    the current IST time is >= the shop's opening time.
+ *
+ * Manual OPEN:   expires at the end of the current day (existing behaviour),
+ *                i.e. when the override date (IST) no longer matches today.
+ */
+function shouldClearManualOverride(shop) {
+  const todayIST = getTodayIST();
+
+  // manual_override_date is stored as a MySQL DATE; normalise to YYYY-MM-DD.
+  const overrideDate = shop.manual_override_date
+    ? new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Kolkata",
+      }).format(new Date(shop.manual_override_date))
+    : null;
+
+  if (shop.current_status === "closed") {
+    // Manual CLOSE — only clear when a new day has started AND we have
+    // reached (or passed) the scheduled opening time.
+    if (!overrideDate || overrideDate >= todayIST) {
+      // Same day or future — keep the manual close.
+      return false;
+    }
+    // Override is from a previous day.  Check if opening time has arrived.
+    const currentSeconds = getCurrentISTSeconds();
+    const openSeconds = timeToSeconds(shop.default_open_time);
+    return currentSeconds >= openSeconds;
+  }
+
+  // Manual OPEN — clear when the day rolls over (existing behaviour).
+  if (overrideDate !== todayIST) {
+    return true;
+  }
+  return false;
+}
+
 async function syncAutomaticShopStatuses() {
   try {
-    const [shops] = await db.query(
+    // 1. Update all shops that are NOT manually overridden.
+    const [autoShops] = await db.query(
       `SELECT shop_id, default_open_time, default_close_time
        FROM shops
        WHERE is_manually_overridden = FALSE`
     );
 
-    for (const shop of shops) {
+    for (const shop of autoShops) {
       const automaticStatus = getAutomaticShopStatus(
         shop.default_open_time,
         shop.default_close_time
@@ -142,6 +222,31 @@ async function syncAutomaticShopStatuses() {
         [automaticStatus, shop.shop_id]
       );
     }
+
+    // 2. Check manually overridden shops to see if the override should expire.
+    const [manualShops] = await db.query(
+      `SELECT shop_id, default_open_time, default_close_time,
+              current_status, manual_override_date
+       FROM shops
+       WHERE is_manually_overridden = TRUE`
+    );
+
+    for (const shop of manualShops) {
+      if (shouldClearManualOverride(shop)) {
+        const automaticStatus = getAutomaticShopStatus(
+          shop.default_open_time,
+          shop.default_close_time
+        );
+        await db.query(
+          `UPDATE shops
+           SET current_status = ?,
+               is_manually_overridden = FALSE,
+               manual_override_date = NULL
+           WHERE shop_id = ?`,
+          [automaticStatus, shop.shop_id]
+        );
+      }
+    }
   } catch (err) {
     console.error("Automatic shop status sync error:", err);
   }
@@ -149,6 +254,13 @@ async function syncAutomaticShopStatuses() {
 async function createShop(req, res) {
   try {
     ensureOnlyFields(req.body, SHOP_WRITE_FIELDS);
+
+    if (!req.file) {
+      return res.status(400).json({
+        message: "A verification document (license / registration proof) is required.",
+      });
+    }
+
     const name = requiredText(req.body.name, "Shop name", { min: 2, max: 150 });
     const categoryId = parseOptionalId(req.body.category_id, "Category ID");
     const address = optionalText(req.body.address, "Address", { max: 255 });
@@ -162,32 +274,43 @@ async function createShop(req, res) {
       ? parseTime(req.body.default_close_time, "Closing time")
       : "20:00:00";
 
+    const businessCategory = optionalText(req.body.business_category, "Business Category", { max: 100 });
+    const businessSubCategory = optionalText(req.body.business_sub_category, "Business Sub Category", { max: 100 });
+
     validateHours(openTime, closeTime);
     await ensureCategoryExists(categoryId);
 
     const [result] = await db.query(
       `INSERT INTO shops (
-        owner_id, name, category_id, address, latitude, longitude, contact_number,
-        default_open_time, default_close_time
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        owner_id, name, category_id, business_category, business_sub_category, address, latitude, longitude, contact_number,
+        default_open_time, default_close_time,
+        is_verified, verification_status, document_url
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE, 'pending', ?)`,
       [
         req.user.user_id,
         name,
         categoryId,
+        businessCategory,
+        businessSubCategory,
         address,
         latitude,
         longitude,
         contactNumber,
         openTime,
         closeTime,
+        req.file.filename,
       ]
     );
 
     return res.status(201).json({
-      message: "Shop registered successfully. It will be visible to customers after verification.",
+      message: "Shop registered successfully. It will be visible to customers after admin verification.",
       shop_id: result.insertId,
     });
   } catch (err) {
+    // Clean up uploaded file on failure
+    if (req.file) {
+      fs.unlink(path.join(UPLOAD_DIR, req.file.filename), () => {});
+    }
     return respondWithError(res, err, "Something went wrong while registering the shop.", "Create shop error:");
   }
 }
@@ -203,28 +326,13 @@ async function getMyShops(req, res) {
       [req.user.user_id]
     );
 
-    // Synchronize automatic statuses
+    // Synchronize statuses before returning to the owner.
     for (const shop of shops) {
-      // If owner manually changed today's status,
-      // respect that decision.
-      const todayIST = new Intl.DateTimeFormat("en-CA", {
-        timeZone: "Asia/Kolkata",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }).format(new Date());
-
-      const manualOverrideDate = shop.manual_override_date
-        ? new Date(shop.manual_override_date)
-            .toISOString()
-            .slice(0, 10)
-        : null;
-
-      if (
-        shop.is_manually_overridden &&
-        manualOverrideDate === todayIST
-      ) {
-        continue;
+      if (shop.is_manually_overridden) {
+        // Check if the manual override should expire.
+        if (!shouldClearManualOverride(shop)) {
+          continue; // Override still active — leave status as-is.
+        }
       }
 
       const automaticStatus = getAutomaticShopStatus(
@@ -281,7 +389,7 @@ async function updateShopDetails(req, res) {
     }
 
     const shopId = parsePositiveId(req.params.id, "Shop ID");
-    const currentShop = await getOwnedShop(shopId, req.user.user_id);
+    const currentShop = await getOwnedVerifiedShop(shopId, req.user.user_id);
     const fields = [];
     const values = [];
 
@@ -294,6 +402,19 @@ async function updateShopDetails(req, res) {
       await ensureCategoryExists(categoryId);
       fields.push("category_id = ?");
       values.push(categoryId);
+    }
+    
+    let requiresReverification = false;
+
+    if (hasOwn(req.body, "business_category")) {
+      fields.push("business_category = ?");
+      values.push(optionalText(req.body.business_category, "Business Category", { max: 100 }));
+      requiresReverification = true;
+    }
+    if (hasOwn(req.body, "business_sub_category")) {
+      fields.push("business_sub_category = ?");
+      values.push(optionalText(req.body.business_sub_category, "Business Sub Category", { max: 100 }));
+      requiresReverification = true;
     }
     if (hasOwn(req.body, "address")) {
       fields.push("address = ?");
@@ -348,6 +469,13 @@ if (
   fields.push("manual_override_date = NULL");
 }
 
+if (requiresReverification) {
+  fields.push("verification_status = 'pending'");
+  fields.push("is_verified = FALSE");
+  fields.push("verification_reason = NULL");
+  fields.push("verified_at = NULL");
+}
+
     values.push(shopId);
     await db.query(`UPDATE shops SET ${fields.join(", ")} WHERE shop_id = ?`, values);
 
@@ -373,19 +501,25 @@ async function updateShopStatus(req, res) {
       return res.status(400).json({ message: "Status must be 'open' or 'closed'." });
     }
 
-    await getOwnedShop(shopId, req.user.user_id);
+    await getOwnedVerifiedShop(shopId, req.user.user_id);
+
+    const todayIST = getTodayIST();
 
     await db.query(
       `UPDATE shops
        SET current_status = ?,
            is_manually_overridden = TRUE,
-           manual_override_date = CURDATE()
+           manual_override_date = ?
        WHERE shop_id = ?`,
-      [status, shopId]
+      [status, todayIST, shopId]
     );
 
+    const message = status === "closed"
+      ? "Shop marked as closed. It will remain closed until you open it or until tomorrow's opening time."
+      : "Shop marked as open for today.";
+
     return res.json({
-      message: `Shop marked as ${status} for today.`,
+      message,
     });
   } catch (err) {
     return respondWithError(
@@ -401,7 +535,7 @@ async function resetShopStatusToAutomatic(req, res) {
   try {
     const shopId = parsePositiveId(req.params.id, "Shop ID");
 
-    const shop = await getOwnedShop(shopId, req.user.user_id);
+    const shop = await getOwnedVerifiedShop(shopId, req.user.user_id);
 
     const automaticStatus = getAutomaticShopStatus(
       shop.default_open_time,
@@ -484,20 +618,15 @@ async function syncShopSchedule(shopId) {
 
   const shop = rows[0];
 
-  // Respect owner's manual decision for today.
-  if (
-    shop.is_manually_overridden &&
-    shop.manual_override_date &&
-    String(shop.manual_override_date).slice(0, 10) ===
-      new Date().toISOString().slice(0, 10)
-  ) {
+  // Respect owner's manual override unless it should be cleared.
+  if (shop.is_manually_overridden && !shouldClearManualOverride(shop)) {
     return shop.current_status;
   }
 
- const scheduledStatus = getAutomaticShopStatus(
-  shop.default_open_time,
-  shop.default_close_time
-);
+  const scheduledStatus = getAutomaticShopStatus(
+    shop.default_open_time,
+    shop.default_close_time
+  );
 
   if (shop.current_status !== scheduledStatus || shop.is_manually_overridden) {
     await db.query(
@@ -597,6 +726,100 @@ async function getOwnerSummary(req, res) {
   }
 }
 
+/**
+ * Owner re-submits a verification document after rejection.
+ * Resets the shop back to pending so the admin queue picks it up again.
+ */
+async function resubmitVerification(req, res) {
+  try {
+    const shopId = parsePositiveId(req.params.id, "Shop ID");
+    const shop = await getOwnedShop(shopId, req.user.user_id);
+
+    if (shop.verification_status !== "rejected") {
+      return res.status(400).json({
+        message: "Only rejected shops can resubmit verification documents.",
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        message: "A new verification document is required.",
+      });
+    }
+
+    // Remove old document from disk if it exists.
+    if (shop.document_url) {
+      const oldPath = path.join(UPLOAD_DIR, shop.document_url);
+      fs.unlink(oldPath, () => {});
+    }
+
+    await db.query(
+      `UPDATE shops
+       SET document_url = ?,
+           verification_status = 'pending',
+           verification_reason = NULL,
+           is_verified = FALSE,
+           verified_at = NULL
+       WHERE shop_id = ?`,
+      [req.file.filename, shopId]
+    );
+
+    return res.json({
+      message: "Document resubmitted. Your shop is back in the verification queue.",
+    });
+  } catch (err) {
+    if (req.file) {
+      fs.unlink(path.join(UPLOAD_DIR, req.file.filename), () => {});
+    }
+    return respondWithError(
+      res, err, "Something went wrong.", "Resubmit verification error:"
+    );
+  }
+}
+
+/**
+ * Serves the verification document for a shop.
+ * Accessible by the shop owner or any admin.
+ */
+async function getShopDocument(req, res) {
+  try {
+    const shopId = parsePositiveId(req.params.id, "Shop ID");
+
+    const [rows] = await db.query(
+      "SELECT owner_id, document_url FROM shops WHERE shop_id = ?",
+      [shopId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Shop not found." });
+    }
+
+    const shop = rows[0];
+    const isOwner = shop.owner_id === req.user.user_id;
+    const isAdmin = req.user.role === "admin";
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: "You do not have access to this document." });
+    }
+
+    if (!shop.document_url) {
+      return res.status(404).json({ message: "No document has been uploaded for this shop." });
+    }
+
+    const filePath = path.join(UPLOAD_DIR, shop.document_url);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: "Document file not found on server." });
+    }
+
+    return res.sendFile(filePath);
+  } catch (err) {
+    return respondWithError(
+      res, err, "Something went wrong.", "Get shop document error:"
+    );
+  }
+}
+
 module.exports = {
   createShop,
   getMyShops,
@@ -610,4 +833,6 @@ module.exports = {
   getCategories,
   getShopById,
   getOwnerSummary,
+  resubmitVerification,
+  getShopDocument,
 };

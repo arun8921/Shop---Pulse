@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   listShops,
   verifyShop,
+  rejectShop,
   deleteShop,
   bulkUploadProducts
 } = require("../controllers/adminController");
@@ -13,6 +14,12 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.get("/shops", verifyToken, requireRole(["admin"]), listShops);
 router.patch("/shops/:id/verify", verifyToken, requireRole(["admin"]), verifyShop);
+router.patch(
+  "/shops/:id/reject",
+  verifyToken,
+  requireRole(["admin"]),
+  rejectShop
+);
 router.post(
   "/products/bulk-upload",
   verifyToken,
@@ -20,6 +27,7 @@ router.post(
   upload.single("file"),
   bulkUploadProducts
 );
+
 router.delete(
   "/shops/:id",
   verifyToken,
