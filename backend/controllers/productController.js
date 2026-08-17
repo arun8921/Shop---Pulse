@@ -515,7 +515,7 @@ async function bulkUploadProducts(req, res) {
     await new Promise((resolve, reject) => {
       const stream = Readable.from(req.file.buffer);
       stream
-        .pipe(csv({ mapHeaders: ({ header }) => header.trim().toLowerCase().replace(/\s+/g, "_") }))
+        .pipe(csv({ mapHeaders: ({ header }) => header.replace(/^\uFEFF/, "").trim().toLowerCase().replace(/\s+/g, "_") }))
         .on("data", (row) => {
           if (rows.length < MAX_CSV_ROWS + 1) rows.push(row);
         })

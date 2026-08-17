@@ -1,5 +1,4 @@
-CREATE DATABASE IF NOT EXISTS shop_pulse;
-USE shop_pulse;
+
 
 CREATE TABLE IF NOT EXISTS users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
