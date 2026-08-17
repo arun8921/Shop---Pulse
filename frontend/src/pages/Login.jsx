@@ -21,7 +21,8 @@ export default function Login() {
       else if (user.role === "admin") navigate("/admin");
       else navigate("/");
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong. Please try again.");
+      const errorMessage = err.response?.data?.message || err.message || "Something went wrong. Please try again.";
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }

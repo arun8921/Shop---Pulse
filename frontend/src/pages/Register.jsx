@@ -22,7 +22,8 @@ export default function Register() {
       if (user.role === "owner") navigate("/dashboard");
       else navigate("/");
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong. Please try again.");
+      const errorMessage = err.response?.data?.message || err.message || "Something went wrong. Please try again.";
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }
