@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Compass, LayoutDashboard, LogOut, PackageSearch, ShieldCheck, Search, ShoppingCart, ArrowLeft, Sun, Moon, Menu } from "lucide-react";
+import { Compass, LayoutDashboard, LogOut, PackageSearch, Search, ArrowLeft, Sun, Moon, Menu } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import Logo from "./Logo";
