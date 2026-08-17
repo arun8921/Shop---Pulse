@@ -26,9 +26,9 @@ module.exports = {
       },
       keyframes: {
         "pulse-beat": {
-          "0%": { boxShadow: "0 0 0 0 rgba(16,185,129,0.45)" },
-          "70%": { boxShadow: "0 0 0 7px rgba(16,185,129,0)" },
-          "100%": { boxShadow: "0 0 0 0 rgba(16,185,129,0)" },
+          "0%": { boxShadow: "0 0 0 0 rgba(250,174,43,0.45)" },
+          "70%": { boxShadow: "0 0 0 7px rgba(250,174,43,0)" },
+          "100%": { boxShadow: "0 0 0 0 rgba(250,174,43,0)" },
         },
       },
       animation: {

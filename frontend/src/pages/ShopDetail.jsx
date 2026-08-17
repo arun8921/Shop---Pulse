@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { Star, ShoppingBag, X, Store, Navigation } from "lucide-react";
+import { Star, ShoppingBag, X, Store, Navigation, ShoppingCart } from "lucide-react";
 import apiClient from "../api/axiosClient";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 export default function ShopDetail() {
   const { shopId } = useParams();
   const { user } = useAuth();
+  const { addToCart } = useCart();
 
   function formatTime(timeStr) {
     if (!timeStr) return "their next opening time";
@@ -132,7 +134,21 @@ export default function ShopDetail() {
         setOrderError("Couldn't access your location.");
         setLocatingAddress(false);
       }
+      
     );
+  }
+
+  function handleAddToCart() {
+    if (!user) {
+      setOrderError("Please login to add to cart.");
+      return;
+    }
+    addToCart(selectedProduct, shop, quantity);
+    setOrderMessage("Added to Cart!");
+    setTimeout(() => {
+      setSelectedProduct(null);
+      setOrderMessage("");
+    }, 1500);
   }
 
   async function handleSubmitReview(e) {
@@ -255,9 +271,16 @@ export default function ShopDetail() {
                     )}
                   </div>
                   <div className="p-3 md:p-4 flex flex-col flex-1">
-                    <span className="text-[10px] font-bold text-ink-soft uppercase tracking-wider mb-1 truncate">
-                      {product.brand || 'Unbranded'}
-                    </span>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[10px] font-bold text-ink-soft uppercase tracking-wider truncate">
+                        {product.brand || 'Unbranded'}
+                      </span>
+                      {!isOut && (
+                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase shrink-0 ${product.availability_status === 'few_left' ? 'bg-amber-soft text-amber' : 'bg-pulse-soft text-pulse'}`}>
+                          {product.availability_status === 'few_left' ? 'Few Left' : 'In Stock'}
+                        </span>
+                      )}
+                    </div>
                     <h3 className="font-semibold text-ink text-[13px] md:text-[14px] leading-snug mb-2 line-clamp-2">
                       {product.name}
                     </h3>
@@ -476,13 +499,22 @@ export default function ShopDetail() {
                         <span className="text-xl font-bold text-ink">₹{(selectedProduct.price * quantity).toFixed(2)}</span>
                       </div>
 
-                      <button
-                        onClick={handlePlaceOrder}
-                        disabled={isPlacingOrder || !address.trim()}
-                        className="w-full btn-primary py-3.5 text-base shadow-lg shadow-pulse/20"
-                      >
-                        {isPlacingOrder ? "Processing..." : "Confirm Order"}
-                      </button>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={handleAddToCart}
+                          disabled={isPlacingOrder || !user}
+                          className="flex-1 btn-secondary py-3.5 justify-center text-ink flex items-center gap-2"
+                        >
+                          <ShoppingCart size={18} /> Add to Cart
+                        </button>
+                        <button
+                          onClick={handlePlaceOrder}
+                          disabled={isPlacingOrder || !address.trim()}
+                          className="flex-1 btn-primary py-3.5 text-base justify-center shadow-lg shadow-pulse/20"
+                        >
+                          {isPlacingOrder ? "Processing..." : "Buy Now"}
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>

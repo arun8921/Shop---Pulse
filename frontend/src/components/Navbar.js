@@ -27,7 +27,7 @@ export default function Navbar({ toggleSidebar }) {
 
   return (
     <div className="sticky top-0 z-50 bg-surface border-b border-border shadow-sm">
-      <div className="max-w-[1400px] mx-auto px-4 md:px-6">
+      <div className="w-full px-4 md:px-6">
         
         {/* Desktop Navbar */}
         <div className="hidden lg:flex items-center justify-between h-[76px] gap-4">
@@ -41,6 +41,16 @@ export default function Navbar({ toggleSidebar }) {
             >
               <Menu size={20} strokeWidth={2.5} />
             </button>
+
+            {!isHomePage && (
+              <button 
+                onClick={() => navigate(-1)} 
+                className="p-2 -ml-1 text-ink-soft hover:bg-pulse-soft hover:text-pulse rounded-full transition-colors flex items-center justify-center border border-border bg-bg shadow-sm"
+                title="Go Back"
+              >
+                <ArrowLeft size={20} strokeWidth={2.5} />
+              </button>
+            )}
             <Link to="/" className="flex items-center gap-2.5 font-display font-bold text-[22px] text-ink group ml-2">
               <div className="w-[36px] h-[36px] rounded-xl bg-pulse flex items-center justify-center shadow-md shadow-pulse/20 group-hover:scale-105 transition-transform">
                 <span className="w-3 h-3 rounded-full bg-white animate-pulse-beat" aria-hidden="true"></span>

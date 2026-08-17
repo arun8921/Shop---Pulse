@@ -6,13 +6,13 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import apiClient from "../api/axiosClient";
 
-const searchCenterIcon = new L.divIcon({
-  className: "custom-glowing-marker",
+const searchCenterIcon = L.divIcon({
+  className: "bg-transparent border-none",
   html: `
-    <div class="relative flex items-center justify-center w-10 h-10">
-      <div class="absolute inset-0 rounded-full bg-slate-400 opacity-20 animate-ping"></div>
-      <div class="absolute inset-2 rounded-full bg-slate-400 opacity-40"></div>
-      <div class="w-3 h-3 bg-slate-200 rounded-full shadow-[0_0_10px_rgba(255,255,255,1)]"></div>
+    <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;">
+      <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; background-color: #94a3b8; opacity: 0.3;"></div>
+      <div style="position: absolute; top: 8px; left: 8px; right: 8px; bottom: 8px; border-radius: 50%; background-color: #94a3b8; opacity: 0.6;"></div>
+      <div style="width: 12px; height: 12px; background-color: #ffffff; border-radius: 50%; box-shadow: 0 0 10px rgba(255,255,255,1); z-index: 10;"></div>
     </div>
   `,
   iconSize: [40, 40],
@@ -20,15 +20,15 @@ const searchCenterIcon = new L.divIcon({
 });
 
 const createGlowingIcon = (isOpen) => {
-  const colorClass = isOpen ? 'bg-pulse' : 'bg-coral';
-  const shadowColor = isOpen ? 'rgba(16,185,129,1)' : 'rgba(239,68,68,1)';
-  return new L.divIcon({
-    className: "custom-glowing-marker",
+  const color = isOpen ? '#10b981' : '#f43f5e'; // emerald-500 for open, rose-500 for closed
+  const shadowColor = isOpen ? 'rgba(16,185,129,0.8)' : 'rgba(244,63,94,0.8)';
+  return L.divIcon({
+    className: "bg-transparent border-none",
     html: `
-      <div class="relative flex items-center justify-center w-8 h-8">
-        <div class="absolute inset-0 rounded-full ${colorClass} opacity-20 animate-ping" style="animation-duration: 2s;"></div>
-        <div class="absolute inset-2 rounded-full ${colorClass} opacity-40"></div>
-        <div class="w-2.5 h-2.5 ${colorClass} rounded-full shadow-[0_0_10px_${shadowColor}]"></div>
+      <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; background-color: ${color}; opacity: 0.2;"></div>
+        <div style="position: absolute; top: 6px; left: 6px; right: 6px; bottom: 6px; border-radius: 50%; background-color: ${color}; opacity: 0.5;"></div>
+        <div style="width: 10px; height: 10px; background-color: ${color}; border-radius: 50%; box-shadow: 0 0 10px ${shadowColor}; border: 1.5px solid white; z-index: 10;"></div>
       </div>
     `,
     iconSize: [32, 32],
@@ -79,6 +79,11 @@ export default function CustomerHome() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [locationDenied, setLocationDenied] = useState(false);
+
+  // Filters State
+  const [filterOpenNow, setFilterOpenNow] = useState(false);
+  const [sortBy, setSortBy] = useState("nearest");
+  const [filterCategory, setFilterCategory] = useState("");
 
   useEffect(() => {
     if (coords) sessionStorage.setItem("sp_coords", JSON.stringify(coords));
@@ -167,11 +172,36 @@ export default function CustomerHome() {
     fetchData();
   }, [fetchData]);
 
+  const getProcessedShops = () => {
+    let result = [...shops];
+    if (filterOpenNow) result = result.filter(s => s.current_status === 'open');
+    if (filterCategory) result = result.filter(s => s.business_category && s.business_category.includes(filterCategory));
+    
+    if (sortBy === 'rating') {
+      result.sort((a, b) => (Number(b.average_rating) || 0) - (Number(a.average_rating) || 0));
+    } else {
+      result.sort((a, b) => Number(a.distance_km) - Number(b.distance_km));
+    }
+    return result;
+  };
+
+  const getProcessedProducts = () => {
+    let result = [...searchResults];
+    if (filterOpenNow) result = result.filter(p => p.current_status === 'open' || !p.current_status);
+    if (sortBy === 'nearest') {
+      result.sort((a, b) => Number(a.distance_km) - Number(b.distance_km));
+    }
+    return result;
+  };
+
+  const processedShops = getProcessedShops();
+  const processedProducts = getProcessedProducts();
+
   const getMapShops = () => {
-    if (!urlQuery) return shops;
+    if (!urlQuery) return processedShops;
     
     const uniqueShops = new Map();
-    searchResults.forEach((p) => {
+    processedProducts.forEach((p) => {
       if (!uniqueShops.has(p.shop_id) && p.latitude && p.longitude) {
         uniqueShops.set(p.shop_id, {
           shop_id: p.shop_id,
@@ -236,18 +266,45 @@ export default function CustomerHome() {
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           <style dangerouslySetInnerHTML={{__html: `::-webkit-scrollbar { display: none; }`}} />
-          <button className="flex items-center gap-2 bg-surface border border-border text-ink text-sm px-4 py-2 rounded-full shadow-sm hover:border-pulse transition-colors font-medium">
-            <Clock size={14} className="text-pulse" /> Open Now
+          
+          <button 
+            onClick={() => setFilterOpenNow(!filterOpenNow)}
+            className={`flex items-center gap-2 border text-sm px-4 py-2 rounded-full shadow-sm font-medium transition-colors shrink-0
+              ${filterOpenNow ? 'bg-pulse text-[var(--color-btn-text)] border-pulse' : 'bg-surface border-border text-ink hover:border-pulse'}
+            `}
+          >
+            <Clock size={14} className={filterOpenNow ? 'text-[var(--color-btn-text)]' : 'text-pulse'} /> Open Now
           </button>
-          <button className="flex items-center gap-2 bg-surface border border-border text-ink text-sm px-4 py-2 rounded-full shadow-sm hover:border-pulse transition-colors font-medium">
-            Nearest First <ChevronDown size={14} className="text-ink-soft" />
-          </button>
-          <button className="flex items-center gap-2 bg-surface border border-border text-ink text-sm px-4 py-2 rounded-full shadow-sm hover:border-pulse transition-colors font-medium">
-            Ratings <ChevronDown size={14} className="text-ink-soft" />
-          </button>
-          <button className="flex items-center gap-2 bg-surface border border-border text-ink text-sm px-4 py-2 rounded-full shadow-sm hover:border-pulse transition-colors font-medium">
-            Bakery <ChevronDown size={14} className="text-ink-soft" />
-          </button>
+
+          <div className="relative shrink-0">
+            <select 
+              value={sortBy} 
+              onChange={e => setSortBy(e.target.value)}
+              className="appearance-none bg-surface border border-border text-ink text-sm pl-4 pr-9 py-2 rounded-full shadow-sm hover:border-pulse focus:outline-none focus:border-pulse transition-colors font-medium cursor-pointer"
+            >
+              <option value="nearest">Nearest First</option>
+              <option value="rating">Highest Rated</option>
+            </select>
+            <ChevronDown size={14} className="text-ink-soft absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+
+          {!urlQuery && (
+            <div className="relative shrink-0">
+              <select 
+                value={filterCategory} 
+                onChange={e => setFilterCategory(e.target.value)}
+                className="appearance-none bg-surface border border-border text-ink text-sm pl-4 pr-9 py-2 rounded-full shadow-sm hover:border-pulse focus:outline-none focus:border-pulse transition-colors font-medium cursor-pointer"
+              >
+                <option value="">All Categories</option>
+                <option value="Grocery">Grocery</option>
+                <option value="Bakery">Bakery</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Clothing">Clothing</option>
+                <option value="Stationery">Stationery</option>
+              </select>
+              <ChevronDown size={14} className="text-ink-soft absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          )}
         </div>
 
         {/* Main Content */}
@@ -255,7 +312,7 @@ export default function CustomerHome() {
           
           {/* LEFT COLUMN: Shops List */}
           <div 
-            className="w-full lg:w-[420px] flex flex-col gap-4 shrink-0 lg:h-[75vh] overflow-y-auto pr-2"
+            className="w-full lg:w-[420px] flex flex-col gap-4 shrink-0 lg:h-[calc(100vh-320px)] overflow-y-auto pr-2"
             style={{ scrollbarWidth: 'thin' }}
           >
             <div className="flex items-center justify-between mb-1">
@@ -282,26 +339,31 @@ export default function CustomerHome() {
               </div>
             ) : urlQuery ? (
               /* PRODUCT RESULTS */
-              searchResults.length === 0 ? (
+              processedProducts.length === 0 ? (
                 <div className="bg-surface border border-border rounded-2xl py-16 text-center shadow-sm">
                   <Search size={40} className="text-ink-soft/30 mx-auto mb-4" />
                   <p className="text-ink font-semibold">No products found</p>
-                  <p className="text-ink-soft text-sm mt-1">Try expanding your search radius.</p>
+                  <p className="text-ink-soft text-sm mt-1">Try expanding your search radius or changing filters.</p>
                 </div>
               ) : (
-                searchResults.map((product) => {
+                processedProducts.map((product) => {
                   const isOut = product.availability_status === 'out_of_stock';
                   return (
                     <div key={product.product_id} className="bg-surface border border-border rounded-2xl p-5 hover:border-pulse/30 transition-colors shadow-sm flex flex-col gap-3 group">
                       <div className="flex justify-between items-start gap-2">
-                        <h3 className="font-semibold text-ink text-sm leading-tight line-clamp-2">
-                          {product.product_name}
-                        </h3>
-                        {isOut ? (
-                          <span className="shrink-0 bg-coral-soft text-coral text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">Out</span>
-                        ) : (
-                          <span className="shrink-0 font-bold text-ink text-sm">₹{product.price}</span>
-                        )}
+                        <div className="flex flex-col items-start gap-1">
+                          <h3 className="font-semibold text-ink text-sm leading-tight line-clamp-2">
+                            {product.product_name}
+                          </h3>
+                          {isOut ? (
+                            <span className="shrink-0 bg-coral-soft text-coral text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">Out of Stock</span>
+                          ) : product.availability_status === 'few_left' ? (
+                            <span className="shrink-0 bg-amber-soft text-amber text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">Few Left</span>
+                          ) : (
+                            <span className="shrink-0 bg-pulse-soft text-pulse text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">In Stock</span>
+                          )}
+                        </div>
+                        <span className="shrink-0 font-bold text-ink text-sm">₹{product.price}</span>
                       </div>
                       
                       <div className="mt-auto pt-3 border-t border-border/50">
@@ -323,14 +385,14 @@ export default function CustomerHome() {
               )
             ) : (
               /* SHOP RESULTS */
-              shops.length === 0 ? (
+              processedShops.length === 0 ? (
                 <div className="bg-surface border border-border rounded-2xl py-16 text-center shadow-sm">
                   <Store size={40} className="text-ink-soft/30 mx-auto mb-4" />
                   <p className="text-ink font-semibold">No shops found</p>
-                  <p className="text-ink-soft text-sm mt-1">Click anywhere on the map to change your location.</p>
+                  <p className="text-ink-soft text-sm mt-1">Try changing filters or your location.</p>
                 </div>
               ) : (
-                shops.map((shop) => (
+                processedShops.map((shop) => (
                   <div key={shop.shop_id} className="bg-surface border border-border rounded-2xl p-5 hover:border-pulse/30 transition-colors cursor-pointer group shadow-sm flex flex-col gap-3">
                     <div className="flex justify-between items-start">
                       <div className="flex flex-col gap-1.5 items-start">
@@ -371,7 +433,7 @@ export default function CustomerHome() {
           </div>
 
           {/* RIGHT COLUMN: Interactive Map */}
-          <div className="flex-1 lg:h-[75vh] min-h-[400px] rounded-[24px] overflow-hidden border border-border relative bg-surface shadow-sm">
+          <div className="flex-1 lg:h-[calc(100vh-320px)] min-h-[400px] rounded-[24px] overflow-hidden border border-border relative bg-surface shadow-sm">
             {!coords ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface z-10">
                 <div className="w-12 h-12 bg-pulse-soft rounded-full flex items-center justify-center mb-4">

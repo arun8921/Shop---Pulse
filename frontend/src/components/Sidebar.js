@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Compass, LayoutDashboard, PackageSearch, Search, ShoppingCart, ShieldCheck, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 export default function Sidebar({ isOpen, setIsOpen }) {
   const { user } = useAuth();
+  const { cartCount } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
@@ -85,10 +87,21 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                 <PackageSearch size={20} />
                 My Orders
               </Link>
-              <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-ink-soft opacity-50 cursor-not-allowed">
-                <ShoppingCart size={20} />
-                Shopping Cart
-              </div>
+              <Link 
+                to="/cart" 
+                onClick={() => window.innerWidth < 1024 && setIsOpen(false)}
+                className={`flex items-center justify-between px-4 py-3.5 rounded-xl font-bold transition-all ${isActive("/cart") ? "bg-pulse text-white shadow-md shadow-pulse/20" : "text-ink-soft hover:bg-slate-soft/50 hover:text-ink"}`}
+              >
+                <div className="flex items-center gap-3">
+                  <ShoppingCart size={20} />
+                  Shopping Cart
+                </div>
+                {cartCount > 0 && (
+                  <span className="bg-pulse text-[var(--color-btn-text)] text-xs font-bold px-2 py-0.5 rounded-full">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
             </>
           )}
 

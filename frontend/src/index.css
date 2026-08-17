@@ -3,49 +3,52 @@
 @tailwind utilities;
 
 :root {
-  --color-bg: #F8FAFC;
-  --color-surface: #FFFFFF;
-  --color-ink: #0F172A;
-  --color-ink-soft: #64748B;
-  --color-border: #E2E8F0;
+  --color-bg: #f2f7f5;
+  --color-surface: #ffffff;
+  --color-ink: #00473e;
+  --color-ink-soft: #475d5b;
+  --color-border: #00332c; /* Strong stroke */
   
-  /* Vibrant fresh green for grocery/marketplace feel */
-  --color-pulse: #059669; 
-  --color-pulse-soft: #D1FAE5;
+  --color-pulse: #faae2b; /* Button / Highlight */
+  --color-pulse-soft: rgba(250, 174, 43, 0.2);
   
-  --color-coral: #EF4444;
-  --color-coral-soft: #FEE2E2;
+  --color-coral: #fa5246; /* Tertiary */
+  --color-coral-soft: rgba(250, 82, 70, 0.15);
   
-  --color-amber: #F59E0B;
-  --color-amber-soft: #FEF3C7;
+  --color-amber: #faae2b; /* Mapping amber to highlight */
+  --color-amber-soft: rgba(250, 174, 43, 0.15);
   
-  --color-slate: #2563EB; /* Blue for admin/secondary */
-  --color-slate-soft: #DBEAFE;
+  --color-slate: #ffa8ba; /* Secondary */
+  --color-slate-soft: rgba(255, 168, 186, 0.25);
+
+  --color-btn-text: #00473e;
 }
 
 .dark {
-  --color-bg: #0F172A;
-  --color-surface: #1E293B;
-  --color-ink: #F8FAFC;
-  --color-ink-soft: #94A3B8;
-  --color-border: #334155;
+  --color-bg: #00332c;
+  --color-surface: #00473e;
+  --color-ink: #f2f7f5;
+  --color-ink-soft: #a1b3b1;
+  --color-border: #475d5b;
   
-  --color-pulse: #10B981;
-  --color-pulse-soft: rgba(16, 185, 129, 0.15);
+  --color-pulse: #faae2b;
+  --color-pulse-soft: rgba(250, 174, 43, 0.15);
   
-  --color-coral: #F87171;
-  --color-coral-soft: rgba(239, 68, 68, 0.15);
+  --color-coral: #fa5246;
+  --color-coral-soft: rgba(250, 82, 70, 0.2);
   
-  --color-amber: #FBBF24;
-  --color-amber-soft: rgba(245, 158, 11, 0.15);
+  --color-amber: #faae2b;
+  --color-amber-soft: rgba(250, 174, 43, 0.15);
   
-  --color-slate: #3B82F6;
-  --color-slate-soft: rgba(59, 130, 246, 0.18);
+  --color-slate: #ffa8ba;
+  --color-slate-soft: rgba(255, 168, 186, 0.2);
+
+  --color-btn-text: #00473e;
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-pulse text-white font-semibold text-sm cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_14px_rgba(5,150,105,0.3)] active:translate-y-0 disabled:opacity-55 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-pulse text-[var(--color-btn-text)] font-semibold text-sm cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_14px_rgba(250,174,43,0.3)] active:translate-y-0 disabled:opacity-55 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none border border-border;
   }
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-surface text-ink font-semibold text-sm cursor-pointer transition-all duration-200 hover:border-pulse hover:bg-pulse-soft hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 disabled:opacity-55 disabled:cursor-not-allowed disabled:hover:translate-y-0;
@@ -54,7 +57,7 @@
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-coral text-white font-semibold text-sm cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_14px_rgba(248,113,113,0.3)] active:translate-y-0 disabled:opacity-55 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none;
   }
   .btn-success {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-pulse text-white font-semibold text-sm cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_14px_rgba(5,150,105,0.3)] active:translate-y-0 disabled:opacity-55 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-pulse text-[var(--color-btn-text)] font-semibold text-sm cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_14px_rgba(250,174,43,0.3)] active:translate-y-0 disabled:opacity-55 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none border border-border;
   }
   .input-field {
     @apply w-full px-4 py-3 border border-border rounded-xl bg-surface text-ink transition-all duration-200 focus:border-pulse focus:outline-none focus:ring-[3px] focus:ring-pulse-soft shadow-sm placeholder:text-ink-soft placeholder:opacity-60;

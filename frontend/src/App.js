@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { CartProvider } from "./context/CartContext";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import PrivateRoute from "./components/PrivateRoute";
@@ -18,6 +19,7 @@ import CustomerDashboard from "./pages/CustomerDashboard";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
+import Cart from "./pages/Cart";
 
 // Guests see the marketing landing page; logged-in users go straight to the
 // functional shop-discovery view.
@@ -54,6 +56,7 @@ export default function App() {
   return (
     <ThemeProvider>
     <AuthProvider>
+      <CartProvider>
       <BrowserRouter>
         <div className="h-screen flex flex-col overflow-hidden bg-bg w-full relative">
           <Navbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
@@ -69,6 +72,14 @@ export default function App() {
                   element={
                     <PrivateRoute allowedRoles={["customer"]}>
                       <MyOrders />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/cart"
+                  element={
+                    <PrivateRoute allowedRoles={["customer"]}>
+                      <Cart />
                     </PrivateRoute>
                   }
                 />
@@ -99,6 +110,7 @@ export default function App() {
           </div>
         </div>
       </BrowserRouter>
+      </CartProvider>
     </AuthProvider>
     </ThemeProvider>
   );
