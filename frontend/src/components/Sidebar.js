@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Compass, LayoutDashboard, PackageSearch, Search, ShoppingCart, ShieldCheck, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import Logo from "./Logo";
 
 export default function Sidebar({ isOpen, setIsOpen }) {
   const { user } = useAuth();
@@ -40,9 +41,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       `}>
         <div className="h-[76px] flex lg:hidden items-center justify-between px-6 border-b border-border shrink-0">
           <Link to="/" className="flex items-center gap-2.5 font-display font-bold text-[22px] text-ink group" onClick={() => window.innerWidth < 1024 && setIsOpen(false)}>
-            <div className="w-[36px] h-[36px] rounded-xl bg-pulse flex items-center justify-center shadow-md shadow-pulse/20 group-hover:scale-105 transition-transform">
-              <span className="w-3 h-3 rounded-full bg-white animate-pulse-beat" aria-hidden="true"></span>
-            </div>
+            <Logo className="w-9 h-9 drop-shadow-md group-hover:scale-105 transition-transform" />
             Shop-Pulse
           </Link>
           <button 

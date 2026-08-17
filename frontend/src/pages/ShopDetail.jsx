@@ -191,10 +191,13 @@ export default function ShopDetail() {
                 
                 <div className="flex flex-wrap items-center gap-3 text-sm font-medium">
                   {shop && (
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full uppercase tracking-wider text-[11px] font-bold ${
-                      shop.current_status === "open" ? "bg-pulse-soft text-pulse" : "bg-coral-soft text-coral"
+                    <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full uppercase tracking-wider text-[11px] font-bold border ${
+                      shop.current_status === "open" ? "bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/30 text-emerald-700 shadow-[0_0_12px_rgba(16,185,129,0.25)]" : "bg-gradient-to-r from-rose-500/10 to-pink-500/10 border-rose-500/30 text-rose-700 shadow-[0_0_12px_rgba(244,63,94,0.25)]"
                     }`}>
-                      <span className={`inline-block w-2 h-2 rounded-full ${shop.current_status === 'open' ? 'bg-pulse animate-pulse-beat' : 'bg-coral'}`}></span>
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${shop.current_status === 'open' ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+                        <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${shop.current_status === 'open' ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-rose-500 shadow-[0_0_6px_#f43f5e]'}`}></span>
+                      </span>
                       {shop.current_status}
                     </span>
                   )}

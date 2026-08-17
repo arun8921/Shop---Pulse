@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import apiClient from "../api/axiosClient";
 
 
-const STATUS_TEXT = { open: "text-pulse", closed: "text-coral" };
-const STATUS_DOT = { open: "bg-pulse animate-pulse-beat", closed: "bg-coral" };
+const STATUS_TEXT = { open: "text-emerald-600 dark:text-emerald-400", closed: "text-coral" };
+const STATUS_DOT = { open: "bg-emerald-500 animate-pulse", closed: "bg-coral" };
 
 export default function AdminPanel() {
   const [shops, setShops] = useState([]);

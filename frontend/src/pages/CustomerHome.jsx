@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { MapPin, Navigation, Store, Search, ChevronDown, Star, LayoutGrid, Clock } from "lucide-react";
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, LayersControl, Marker, Popup, useMap, useMapEvents, Circle } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import apiClient from "../api/axiosClient";
@@ -9,30 +9,33 @@ import apiClient from "../api/axiosClient";
 const searchCenterIcon = L.divIcon({
   className: "bg-transparent border-none",
   html: `
-    <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;">
-      <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; background-color: #94a3b8; opacity: 0.3;"></div>
-      <div style="position: absolute; top: 8px; left: 8px; right: 8px; bottom: 8px; border-radius: 50%; background-color: #94a3b8; opacity: 0.6;"></div>
-      <div style="width: 12px; height: 12px; background-color: #ffffff; border-radius: 50%; box-shadow: 0 0 10px rgba(255,255,255,1); z-index: 10;"></div>
+    <div style="display: flex; align-items: flex-end; justify-content: center;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" fill="#3b82f6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.3));">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+        <circle cx="12" cy="10" r="3" fill="white" stroke="none"></circle>
+      </svg>
     </div>
   `,
   iconSize: [40, 40],
-  iconAnchor: [20, 20],
+  iconAnchor: [20, 40],
+  popupAnchor: [0, -40]
 });
 
 const createGlowingIcon = (isOpen) => {
   const color = isOpen ? '#10b981' : '#f43f5e'; // emerald-500 for open, rose-500 for closed
-  const shadowColor = isOpen ? 'rgba(16,185,129,0.8)' : 'rgba(244,63,94,0.8)';
   return L.divIcon({
     className: "bg-transparent border-none",
     html: `
-      <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px;">
-        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; background-color: ${color}; opacity: 0.2;"></div>
-        <div style="position: absolute; top: 6px; left: 6px; right: 6px; bottom: 6px; border-radius: 50%; background-color: ${color}; opacity: 0.5;"></div>
-        <div style="width: 10px; height: 10px; background-color: ${color}; border-radius: 50%; box-shadow: 0 0 10px ${shadowColor}; border: 1.5px solid white; z-index: 10;"></div>
+      <div style="display: flex; align-items: flex-end; justify-content: center;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" fill="${color}" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.3));">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <circle cx="12" cy="10" r="3" fill="white" stroke="none"></circle>
+        </svg>
       </div>
     `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
+    iconSize: [36, 36],
+    iconAnchor: [18, 36],
+    popupAnchor: [0, -36]
   });
 };
 
@@ -233,7 +236,7 @@ export default function CustomerHome() {
               onClick={isManualLocation ? resetToMyLocation : undefined}
               title={isManualLocation ? "Click to reset to your location" : ""}
             >
-              <span className="text-[9px] text-ink-soft uppercase tracking-wider font-bold mb-0.5">Delivering to</span>
+              <span className="text-[9px] text-ink-soft uppercase tracking-wider font-bold mb-0.5"></span>
               <div className="flex items-center gap-2">
                 <span className="text-ink font-semibold text-sm">
                   {locationDenied ? "Default Location" : isManualLocation ? "Selected Area (Map)" : "Current Location"}
@@ -403,8 +406,11 @@ export default function CustomerHome() {
                           </span>
                         )}
                       </div>
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${shop.current_status === 'open' ? 'border-pulse/20 text-pulse bg-pulse-soft' : 'border-coral/20 text-coral bg-coral-soft'}`}>
-                        <span className={`inline-block w-1.5 h-1.5 rounded-full ${shop.current_status === 'open' ? 'bg-pulse animate-pulse-beat' : 'bg-coral'}`}></span>
+                      <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${shop.current_status === 'open' ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/30 text-emerald-700 shadow-[0_0_12px_rgba(16,185,129,0.25)]' : 'bg-gradient-to-r from-rose-500/10 to-pink-500/10 border-rose-500/30 text-rose-700 shadow-[0_0_12px_rgba(244,63,94,0.25)]'}`}>
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${shop.current_status === 'open' ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+                          <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${shop.current_status === 'open' ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-rose-500 shadow-[0_0_6px_#f43f5e]'}`}></span>
+                        </span>
                         {shop.current_status}
                       </span>
                     </div>
@@ -443,19 +449,48 @@ export default function CustomerHome() {
               </div>
             ) : (
               <MapContainer center={[coords.lat, coords.lng]} zoom={13} style={{ height: "100%", width: "100%" }} className="z-0 [&_.leaflet-container]:rounded-[24px]">
-                <TileLayer 
-                  attribution='&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors' 
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
-                />
+                <LayersControl position="topright">
+                  <LayersControl.BaseLayer checked name="Street (Default)">
+                    <TileLayer 
+                      attribution='&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors' 
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+                    />
+                  </LayersControl.BaseLayer>
+                  <LayersControl.BaseLayer name="Satellite">
+                    <TileLayer 
+                      attribution='&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community' 
+                      url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" 
+                    />
+                  </LayersControl.BaseLayer>
+                  <LayersControl.BaseLayer name="Terrain">
+                    <TileLayer 
+                      attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' 
+                      url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png" 
+                    />
+                  </LayersControl.BaseLayer>
+                </LayersControl>
                 <RecenterMap lat={coords.lat} lng={coords.lng} />
                 <ClickToSearchHandler onPick={handleMapClick} />
                 
                 {/* Center marker */}
                 <Marker position={[coords.lat, coords.lng]} icon={searchCenterIcon}>
                   <Popup>
-                    <div className="text-center font-body text-ink font-bold">Your Delivery Center</div>
+                    <div className="text-center font-body text-ink font-bold">You Are Here</div>
                   </Popup>
                 </Marker>
+
+                {/* Radius Aura */}
+                <Circle 
+                  center={[coords.lat, coords.lng]} 
+                  radius={radius * 1000} 
+                  pathOptions={{ 
+                    color: '#3b82f6', 
+                    fillColor: '#3b82f6', 
+                    fillOpacity: 0.15, 
+                    weight: 2, 
+                    dashArray: '5, 5' 
+                  }} 
+                />
                 
                 {/* Shop markers */}
                 {mapShopsToRender.map(shop => {
@@ -469,8 +504,11 @@ export default function CustomerHome() {
                       <Popup>
                         <div className="text-center font-body">
                           <strong className="block text-[14px] text-ink mb-1">{shop.name}</strong>
-                          <span className={`inline-flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${shop.current_status === 'open' ? 'bg-pulse-soft text-pulse' : 'bg-coral-soft text-coral'}`}>
-                            <span className={`inline-block w-1.5 h-1.5 rounded-full ${shop.current_status === 'open' ? 'bg-pulse animate-pulse-beat' : 'bg-coral'}`}></span>
+                          <span className={`inline-flex items-center justify-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border ${shop.current_status === 'open' ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/30 text-emerald-700 shadow-[0_0_12px_rgba(16,185,129,0.25)]' : 'bg-gradient-to-r from-rose-500/10 to-pink-500/10 border-rose-500/30 text-rose-700 shadow-[0_0_12px_rgba(244,63,94,0.25)]'}`}>
+                            <span className="relative flex h-2 w-2">
+                              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${shop.current_status === 'open' ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+                              <span className={`relative inline-flex rounded-full h-2 w-2 ${shop.current_status === 'open' ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-rose-500 shadow-[0_0_6px_#f43f5e]'}`}></span>
+                            </span>
                             {shop.current_status}
                           </span>
                           <br/>

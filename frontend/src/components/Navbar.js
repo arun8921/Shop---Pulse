@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Compass, LayoutDashboard, LogOut, PackageSearch, ShieldCheck, Search, ShoppingCart, ArrowLeft, Sun, Moon, Menu } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import Logo from "./Logo";
 
 export default function Navbar({ toggleSidebar }) {
   const { user, logout } = useAuth();
@@ -52,9 +53,7 @@ export default function Navbar({ toggleSidebar }) {
               </button>
             )}
             <Link to="/" className="flex items-center gap-2.5 font-display font-bold text-[22px] text-ink group ml-2">
-              <div className="w-[36px] h-[36px] rounded-xl bg-pulse flex items-center justify-center shadow-md shadow-pulse/20 group-hover:scale-105 transition-transform">
-                <span className="w-3 h-3 rounded-full bg-white animate-pulse-beat" aria-hidden="true"></span>
-              </div>
+              <Logo className="w-9 h-9 drop-shadow-md group-hover:scale-105 transition-transform" />
               Shop-Pulse
             </Link>
           </div>
@@ -110,10 +109,8 @@ export default function Navbar({ toggleSidebar }) {
                   <ArrowLeft size={20} strokeWidth={2.5} />
                 </button>
               )}
-              <Link to="/" className="flex items-center gap-2 font-display font-bold text-[20px] text-ink ml-1">
-                <div className="w-[28px] h-[28px] rounded-lg bg-pulse flex items-center justify-center shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-white animate-pulse-beat"></span>
-                </div>
+              <Link to="/" className="flex items-center gap-2 font-display font-bold text-[20px] text-ink ml-1 group">
+                <Logo className="w-7 h-7 drop-shadow-sm group-hover:scale-105 transition-transform" />
                 Shop-Pulse
               </Link>
             </div>

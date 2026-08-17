@@ -82,7 +82,7 @@ function HeroMap() {
                 <Popup>
                   <div className="text-center font-sans">
                     <strong className="block text-[14px] text-ink mb-1">{shop.name}</strong>
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${shop.current_status === 'open' ? 'bg-pulse-soft text-pulse' : 'bg-coral-soft text-coral'}`}>
+                    <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${shop.current_status === 'open' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-coral-soft text-coral'}`}>
                       {shop.current_status === "open" ? "Open now" : "Closed"}
                     </span>
                   </div>

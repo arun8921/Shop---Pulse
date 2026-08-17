@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import Logo from "../components/Logo";
 
 export default function Register() {
   const { register } = useAuth();
@@ -30,12 +31,10 @@ export default function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg p-5">
       <div className="w-full max-w-[420px] bg-surface rounded-[20px] shadow-sm border border-border p-8 sm:p-10">
-        <div className="flex items-center gap-2 mb-8 font-display font-bold text-[22px] text-ink">
-          <div className="w-[34px] h-[34px] rounded-xl bg-pulse flex items-center justify-center shadow-md shadow-pulse/20">
-            <span className="w-3 h-3 rounded-full bg-white animate-pulse-beat" aria-hidden="true"></span>
-          </div>
+        <Link to="/" className="flex items-center gap-2 mb-8 font-display font-bold text-[22px] text-ink group hover:opacity-80 transition-opacity w-fit cursor-pointer">
+          <Logo className="w-[34px] h-[34px] drop-shadow-md group-hover:scale-105 transition-transform" />
           Shop-Pulse
-        </div>
+        </Link>
 
         <h1 className="font-display font-bold text-ink text-[32px] leading-tight mb-2">
           Create an account

@@ -11,8 +11,8 @@ const ORDER_NEXT_STEPS = {
   cancelled: [],
 };
 
-const STATUS_TEXT = { open: "text-pulse", closed: "text-coral" };
-const STATUS_DOT = { open: "bg-pulse animate-pulse-beat", closed: "bg-coral" };
+const STATUS_TEXT = { open: "text-emerald-600 dark:text-emerald-400", closed: "text-coral" };
+const STATUS_DOT = { open: "bg-emerald-500 animate-pulse", closed: "bg-coral" };
 
 export default function OwnerDashboard() {
   const [shops, setShops] = useState([]);
@@ -639,7 +639,7 @@ async function saveCategorySettings() {
           )}
           {activeShop.verification_status === "approved" && (
             <div className="card flex items-center gap-3 flex-wrap mb-6">
-              <span className="inline-flex items-center gap-[7px] text-pulse font-semibold text-[13px]">✅ Verified & Live</span>
+              <span className="inline-flex items-center gap-[7px] text-emerald-600 font-semibold text-[13px]">✅ Verified & Live</span>
               <span className={`inline-flex items-center gap-[7px] font-mono text-[12.5px] ${STATUS_TEXT[activeShop.current_status]}`}>
                 <span className={`inline-block w-[9px] h-[9px] rounded-full ${STATUS_DOT[activeShop.current_status]}`}></span>
                 {activeShop.current_status === "open" ? "Currently open" : "Currently closed"}
