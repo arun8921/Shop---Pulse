@@ -25,6 +25,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Prevent browser caching for all API requests to ensure live statuses update immediately on refresh
+app.use("/api", (req, res, next) => {
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  next();
+});
+
 app.get("/", (req, res) => {
   res.json({ message: "Shop-Pulse API is running." });
 });

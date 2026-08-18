@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, LayersControl, Marker, Popup, useMap, useMapEv
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import apiClient from "../api/axiosClient";
-
+import { BUSINESS_CATEGORIES } from "../utils/categories";
 const searchCenterIcon = L.divIcon({
   className: "bg-transparent border-none",
   html: `
@@ -178,7 +178,12 @@ export default function CustomerHome() {
   const getProcessedShops = () => {
     let result = [...shops];
     if (filterOpenNow) result = result.filter(s => s.current_status === 'open');
-    if (filterCategory) result = result.filter(s => s.business_category && s.business_category.includes(filterCategory));
+    if (filterCategory) {
+      result = result.filter(s => 
+        (s.business_category && s.business_category.includes(filterCategory)) ||
+        (s.business_sub_category && s.business_sub_category.includes(filterCategory))
+      );
+    }
     
     if (sortBy === 'rating') {
       result.sort((a, b) => (Number(b.average_rating) || 0) - (Number(a.average_rating) || 0));
@@ -296,14 +301,12 @@ export default function CustomerHome() {
               <select 
                 value={filterCategory} 
                 onChange={e => setFilterCategory(e.target.value)}
-                className="appearance-none bg-surface border border-border text-ink text-sm pl-4 pr-9 py-2 rounded-full shadow-sm hover:border-pulse focus:outline-none focus:border-pulse transition-colors font-medium cursor-pointer"
+                className="appearance-none bg-surface border border-border text-ink text-sm pl-4 pr-9 py-2 rounded-full shadow-sm hover:border-pulse focus:outline-none focus:border-pulse transition-colors font-medium cursor-pointer max-w-[200px] truncate"
               >
                 <option value="">All Categories</option>
-                <option value="Grocery">Grocery</option>
-                <option value="Bakery">Bakery</option>
-                <option value="Electronics">Electronics</option>
-                <option value="Clothing">Clothing</option>
-                <option value="Stationery">Stationery</option>
+                {Object.keys(BUSINESS_CATEGORIES).map(cat => (
+                  <option key={cat} value={cat}>{cat.replace(/^[^\w\s]+/, '').trim()}</option>
+                ))}
               </select>
               <ChevronDown size={14} className="text-ink-soft absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
@@ -370,12 +373,17 @@ export default function CustomerHome() {
                       </div>
                       
                       <div className="mt-auto pt-3 border-t border-border/50">
-                        <div className="flex items-center gap-1.5 text-ink-soft text-xs font-medium mb-3 truncate">
-                          <Store size={12} className="text-pulse/70" /> {product.shop_name} • {Number(product.distance_km).toFixed(1)} km away
+                        <div className="flex justify-between items-center mb-3">
+                          <div className="flex items-center gap-1.5 text-ink-soft text-xs font-medium truncate pr-2">
+                            <Store size={12} className="text-pulse/70 shrink-0" /> <span className="truncate">{product.shop_name}</span> • {Number(product.distance_km).toFixed(1)} km
+                          </div>
+                          <span className={`shrink-0 text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider border ${product.current_status === 'open' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700' : 'bg-rose-500/10 border-rose-500/30 text-rose-700'}`}>
+                            {product.current_status}
+                          </span>
                         </div>
                         <div className="flex justify-end">
                           <button 
-                            onClick={() => navigate(`/shops/${product.shop_id}`)}
+                            onClick={() => navigate(`/shops/${product.shop_id}${urlQuery ? `?highlight=${encodeURIComponent(urlQuery)}` : ''}`)}
                             className="bg-pulse-soft hover:bg-pulse/20 text-pulse px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
                           >
                             <LayoutGrid size={14} /> View Shop
@@ -400,9 +408,9 @@ export default function CustomerHome() {
                     <div className="flex justify-between items-start">
                       <div className="flex flex-col gap-1.5 items-start">
                         <h3 className="font-display font-bold text-lg text-ink leading-none">{shop.name}</h3>
-                        {shop.business_category && (
+                        {(shop.business_sub_category || shop.business_category) && (
                           <span className="bg-bg text-ink-soft text-[10px] font-bold px-2 py-0.5 rounded-full border border-border flex items-center gap-1">
-                            {shop.business_category.includes('Grocery') ? '🥦' : shop.business_category.includes('Electronics') ? '⚡' : shop.business_category.includes('Bakery') ? '🥐' : '🏪'} {shop.business_category}
+                            {(shop.business_sub_category || shop.business_category).includes('Grocery') ? '🥦' : (shop.business_sub_category || shop.business_category).includes('Electronics') ? '⚡' : (shop.business_sub_category || shop.business_category).includes('Bakery') ? '🥐' : '🏪'} {shop.business_sub_category || shop.business_category}
                           </span>
                         )}
                       </div>

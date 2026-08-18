@@ -183,6 +183,17 @@ function normalizePassword(value, label = "Password") {
   return value;
 }
 
+function normalizeName(value, label = "Name") {
+  const normalized = requiredText(value, label, { min: 2, max: 100 });
+  if (/\d/.test(normalized)) {
+    fail(`${label} cannot contain numbers.`);
+  }
+  if (/[^a-zA-Z\s'-]/.test(normalized)) {
+    fail(`${label} can only contain letters, spaces, hyphens, and apostrophes.`);
+  }
+  return normalized;
+}
+
 function respondWithError(res, err, fallbackMessage, logLabel) {
   if (err instanceof ValidationError) {
     return res.status(err.statusCode).json({ message: err.message });
@@ -209,5 +220,6 @@ module.exports = {
   normalizeEmail,
   normalizePhone,
   normalizePassword,
+  normalizeName,
   respondWithError,
 };

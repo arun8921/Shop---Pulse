@@ -16,10 +16,15 @@ import CustomerHome from "./pages/CustomerHome";
 import ShopDetail from "./pages/ShopDetail";
 import MyOrders from "./pages/MyOrders";
 import CustomerDashboard from "./pages/CustomerDashboard";
-import OwnerDashboard from "./pages/OwnerDashboard";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 import Cart from "./pages/Cart";
+
+import OwnerLayout from "./pages/OwnerLayout";
+import OwnerDashboard from "./pages/OwnerDashboard";
+import OwnerProducts from "./pages/OwnerProducts";
+import OwnerOrders from "./pages/OwnerOrders";
+import OwnerSettings from "./pages/OwnerSettings";
 
 // Guests see the marketing landing page; logged-in users go straight to the
 // functional shop-discovery view.
@@ -32,7 +37,7 @@ function Home() {
 function RoleDashboard() {
   const { user, loading } = useAuth();
   if (loading) return null;
-  if (user?.role === "owner") return <OwnerDashboard />;
+  if (user?.role === "owner") return <Navigate to="/owner/dashboard" replace />;
   if (user?.role === "admin") return <AdminPanel />;
   if (user?.role === "customer") return <CustomerDashboard />;
   return <Navigate to="/" replace />;
@@ -89,13 +94,18 @@ export default function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/dashboard" element={<PrivateRoute><RoleDashboard /></PrivateRoute>} />
                 <Route
-                  path="/owner/dashboard"
+                  path="/owner"
                   element={
                     <PrivateRoute allowedRoles={["owner"]}>
-                      <OwnerDashboard />
+                      <OwnerLayout />
                     </PrivateRoute>
                   }
-                />
+                >
+                  <Route path="dashboard" element={<OwnerDashboard />} />
+                  <Route path="products" element={<OwnerProducts />} />
+                  <Route path="orders" element={<OwnerOrders />} />
+                  <Route path="settings" element={<OwnerSettings />} />
+                </Route>
                 <Route
                   path="/admin"
                   element={

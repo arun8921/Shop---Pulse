@@ -76,7 +76,7 @@ async function getMyOrders(req, res) {
     const [rows] = await db.query(
       `SELECT o.order_id, o.quantity, o.delivery_address, o.status, o.order_time, o.updated_at,
               p.name AS product_name, p.price,
-              s.name AS shop_name, s.address AS shop_address
+              s.name AS shop_name, s.address AS shop_address, s.contact_number AS shop_phone
        FROM orders o
        JOIN products p ON o.product_id = p.product_id
        JOIN shops s ON o.shop_id = s.shop_id

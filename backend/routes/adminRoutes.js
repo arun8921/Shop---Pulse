@@ -6,12 +6,11 @@ const {
   verifyShop,
   rejectShop,
   deleteShop,
-  bulkUploadProducts
+  listUsers
 } = require("../controllers/adminController");
 const { verifyToken, requireRole } = require("../middleware/auth");
 
-const upload = multer({ storage: multer.memoryStorage() });
-
+router.get("/users", verifyToken, requireRole(["admin"]), listUsers);
 router.get("/shops", verifyToken, requireRole(["admin"]), listShops);
 router.patch("/shops/:id/verify", verifyToken, requireRole(["admin"]), verifyShop);
 router.patch(
@@ -19,13 +18,6 @@ router.patch(
   verifyToken,
   requireRole(["admin"]),
   rejectShop
-);
-router.post(
-  "/products/bulk-upload",
-  verifyToken,
-  requireRole(["admin"]),
-  upload.single("file"),
-  bulkUploadProducts
 );
 
 router.delete(

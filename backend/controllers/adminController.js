@@ -160,65 +160,18 @@ async function deleteShop(req, res) {
     });
   }
 }
-async function bulkUploadProducts(req, res) {
+async function listUsers(req, res) {
   try {
-    const { shop_id } = req.body;
-
-    if (!shop_id) {
-      return res.status(400).json({ message: "shop_id is required (as a form field)." });
-    }
-    if (!req.file) {
-      return res.status(400).json({ message: "A CSV file is required (form field name: 'file')." });
-    }
-
-    const [shopRows] = await db.query("SELECT shop_id FROM shops WHERE shop_id = ?", [shop_id]);
-    if (shopRows.length === 0) {
-      return res.status(404).json({ message: "Shop not found." });
-    }
-
-    const validStatuses = ["available", "out_of_stock", "few_left"];
-    const productsToInsert = [];
-    const skippedRows = [];
-
-    await new Promise((resolve, reject) => {
-      const stream = Readable.from(req.file.buffer);
-      stream
-        .pipe(csv())
-        .on("data", (row) => {
-          const name = (row.name || "").trim();
-          const price = parseFloat(row.price);
-          const rawStatus = (row.availability_status || "available").trim().toLowerCase();
-          const status = validStatuses.includes(rawStatus) ? rawStatus : "available";
-
-          if (!name || isNaN(price)) {
-            skippedRows.push(row);
-            return;
-          }
-          productsToInsert.push([shop_id, name, price, status]);
-        })
-        .on("end", resolve)
-        .on("error", reject);
-    });
-
-    if (productsToInsert.length === 0) {
-      return res.status(400).json({
-        message: "No valid rows found in the CSV. Expected columns: name, price, availability_status.",
-        skipped_rows: skippedRows,
-      });
-    }
-
-    await db.query(
-      "INSERT INTO products (shop_id, name, price, availability_status) VALUES ?",
-      [productsToInsert]
+    const [rows] = await db.query(
+      `SELECT user_id, name, email, phone, role, created_at
+       FROM users
+       ORDER BY role ASC, created_at DESC`
     );
 
-    return res.status(201).json({
-      message: `${productsToInsert.length} product(s) uploaded successfully.`,
-      skipped_row_count: skippedRows.length,
-    });
+    return res.json({ users: rows });
   } catch (err) {
-    console.error("Bulk upload products error:", err);
-    return res.status(500).json({ message: "Something went wrong while processing the CSV file." });
+    console.error("List users error:", err);
+    return res.status(500).json({ message: "Something went wrong." });
   }
 }
 
@@ -227,5 +180,6 @@ module.exports = {
   verifyShop,
   rejectShop,
   deleteShop,
-  bulkUploadProducts
+  listUsers
+
 };

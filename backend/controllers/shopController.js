@@ -581,7 +581,7 @@ async function getNearbyShops(req, res) {
      SELECT s.shop_id, s.name, s.address, s.latitude, s.longitude,
   s.current_status,
   s.last_updated, s.is_verified,
-        c.name AS category_name,
+        s.business_category, s.business_sub_category,
         COALESCE(rs.average_rating, 0) AS average_rating,
         COALESCE(rs.review_count, 0) AS review_count,
         ${distanceExpression} AS distance_km

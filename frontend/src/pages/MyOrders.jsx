@@ -128,10 +128,18 @@ export default function MyOrders() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-auto pt-4 border-t border-border">
                     <div>
                       <p className="text-xs font-semibold text-ink-soft uppercase tracking-wider mb-1">Delivery Address</p>
-                      <p className="text-sm text-ink flex items-start gap-1.5">
+                      <p className="text-sm text-ink flex items-start gap-1.5 mb-3">
                         <MapPin size={16} className="text-ink-soft shrink-0 mt-0.5" />
                         <span className="line-clamp-2">{o.delivery_address}</span>
                       </p>
+                      {o.shop_phone && (
+                        <a 
+                          href={`tel:${o.shop_phone}`}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate hover:text-slate/80 bg-slate-soft px-2.5 py-1.5 rounded-md transition-colors"
+                        >
+                          📞 Contact Shop
+                        </a>
+                      )}
                     </div>
                     
                     <div className="flex items-end justify-between md:justify-end gap-6">

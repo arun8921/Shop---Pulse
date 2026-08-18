@@ -322,7 +322,7 @@ async function searchProducts(req, res) {
         p.product_id, p.name AS product_name, p.description, p.brand, p.unit,
         p.price, p.mrp, p.availability_status,
         s.shop_id, s.name AS shop_name, s.address, s.current_status,
-        s.latitude, s.longitude, c.name AS category_name,
+        s.latitude, s.longitude, s.business_category,
         ${distanceExpression} AS distance_km
       FROM products p
       JOIN shops s ON p.shop_id = s.shop_id

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Compass, LayoutDashboard, PackageSearch, Search, ShoppingCart, ShieldCheck, X } from "lucide-react";
+import { Compass, LayoutDashboard, PackageSearch, Search, ShoppingCart, ShieldCheck, X, User, Mail, Store, Package, Settings } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import Logo from "./Logo";
@@ -20,7 +20,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   }
 
   const isActive = (path) => location.pathname === path;
-  const isDashboard = location.pathname.includes("/dashboard") || location.pathname.includes("/admin");
+  const isDashboard = location.pathname.includes("/dashboard") || location.pathname.includes("/admin") || location.pathname.includes("/owner");
 
   return (
     <>
@@ -79,6 +79,14 @@ export default function Sidebar({ isOpen, setIsOpen }) {
           {user && user.role === "customer" && (
             <>
               <Link 
+                to="/dashboard" 
+                onClick={() => window.innerWidth < 1024 && setIsOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all ${isActive("/dashboard") ? "bg-pulse text-white shadow-md shadow-pulse/20" : "text-ink-soft hover:bg-slate-soft/50 hover:text-ink"}`}
+              >
+                <User size={20} />
+                My Profile
+              </Link>
+              <Link 
                 to="/my-orders" 
                 onClick={() => window.innerWidth < 1024 && setIsOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all ${isActive("/my-orders") ? "bg-pulse text-white shadow-md shadow-pulse/20" : "text-ink-soft hover:bg-slate-soft/50 hover:text-ink"}`}
@@ -104,16 +112,63 @@ export default function Sidebar({ isOpen, setIsOpen }) {
             </>
           )}
 
-          {user && (user.role === "owner" || user.role === "admin") && (
+          {user && user.role === "admin" && (
             <Link 
               to="/dashboard" 
               onClick={() => window.innerWidth < 1024 && setIsOpen(false)}
               className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all ${isDashboard ? "bg-pulse text-white shadow-md shadow-pulse/20" : "text-ink-soft hover:bg-slate-soft/50 hover:text-ink"}`}
             >
-              {user.role === "admin" ? <ShieldCheck size={20} /> : <LayoutDashboard size={20} />}
-              Dashboard
+              <ShieldCheck size={20} />
+              Admin Dashboard
             </Link>
           )}
+
+          {user && user.role === "owner" && (
+            <>
+              <Link 
+                to="/owner/dashboard" 
+                onClick={() => window.innerWidth < 1024 && setIsOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all ${isActive("/owner/dashboard") ? "bg-pulse text-white shadow-md shadow-pulse/20" : "text-ink-soft hover:bg-slate-soft/50 hover:text-ink"}`}
+              >
+                <LayoutDashboard size={20} />
+                Overview
+              </Link>
+              <Link 
+                to="/owner/products" 
+                onClick={() => window.innerWidth < 1024 && setIsOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all ${isActive("/owner/products") ? "bg-pulse text-white shadow-md shadow-pulse/20" : "text-ink-soft hover:bg-slate-soft/50 hover:text-ink"}`}
+              >
+                <Store size={20} />
+                Products
+              </Link>
+              <Link 
+                to="/owner/orders" 
+                onClick={() => window.innerWidth < 1024 && setIsOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all ${isActive("/owner/orders") ? "bg-pulse text-white shadow-md shadow-pulse/20" : "text-ink-soft hover:bg-slate-soft/50 hover:text-ink"}`}
+              >
+                <Package size={20} />
+                Orders
+              </Link>
+              <Link 
+                to="/owner/settings" 
+                onClick={() => window.innerWidth < 1024 && setIsOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all ${isActive("/owner/settings") ? "bg-pulse text-white shadow-md shadow-pulse/20" : "text-ink-soft hover:bg-slate-soft/50 hover:text-ink"}`}
+              >
+                <Settings size={20} />
+                Settings
+              </Link>
+            </>
+          )}
+
+          <div className="mt-4 pt-4 border-t border-border">
+            <a 
+              href="mailto:support@shop-pulse.com?subject=Shop-Pulse Support Request" 
+              className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-ink-soft hover:bg-slate-soft/50 hover:text-ink transition-all"
+            >
+              <Mail size={20} />
+              Help & Support
+            </a>
+          </div>
         </nav>
       </div>
     </div>

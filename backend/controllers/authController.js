@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const db = require("../config/db");
+const { requiredText, normalizePhone, respondWithError, normalizeName, normalizeEmail, normalizePassword } = require("../utils/validation");
 require("dotenv").config();
 
 const SALT_ROUNDS = 10;
@@ -118,11 +119,11 @@ async function resetPassword(req, res) {
 
 async function register(req, res) {
   try {
-    const { name, email, password, role, phone } = req.body;
-
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "Name, email, and password are required." });
-    }
+    const name = normalizeName(req.body.name, "Name");
+    const email = normalizeEmail(req.body.email);
+    const password = normalizePassword(req.body.password);
+    const phone = normalizePhone(req.body.phone, { required: false });
+    const role = req.body.role;
 
     const allowedRoles = ["customer", "owner", "admin"];
     const finalRole = allowedRoles.includes(role) ? role : "customer";
@@ -136,7 +137,7 @@ async function register(req, res) {
 
     const [result] = await db.query(
       "INSERT INTO users (name, email, password_hash, role, phone) VALUES (?, ?, ?, ?, ?)",
-      [name, email, passwordHash, finalRole, phone || null]
+      [name, email, passwordHash, finalRole, phone]
     );
 
     const token = jwt.sign(
@@ -151,8 +152,7 @@ async function register(req, res) {
       user: { user_id: result.insertId, name, email, role: finalRole },
     });
   } catch (err) {
-    console.error("Register error:", err);
-    return res.status(500).json({ message: "Something went wrong during registration." });
+    return respondWithError(res, err, "Something went wrong during registration.", "Register error:");
   }
 }
 
@@ -210,15 +210,12 @@ async function getProfile(req, res) {
 }
 async function updateProfile(req, res) {
   try {
-    const { name, phone } = req.body;
-
-    if (!name) {
-      return res.status(400).json({ message: "Name is required." });
-    }
+    const name = requiredText(req.body.name, "Name", { min: 2, max: 100 });
+    const phone = normalizePhone(req.body.phone, { required: false });
 
     const [result] = await db.query(
       "UPDATE users SET name = ?, phone = ? WHERE user_id = ?",
-      [name, phone || null, req.user.user_id]
+      [name, phone, req.user.user_id]
     );
 
     if (result.affectedRows === 0) {
@@ -235,8 +232,7 @@ async function updateProfile(req, res) {
       user: rows[0],
     });
   } catch (err) {
-    console.error("Update profile error:", err);
-    return res.status(500).json({ message: "Something went wrong." });
+    return respondWithError(res, err, "Something went wrong.", "Update profile error:");
   }
 }
 module.exports = {

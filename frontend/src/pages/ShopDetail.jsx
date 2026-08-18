@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Star, ShoppingBag, X, Store, Navigation, ShoppingCart } from "lucide-react";
 import apiClient from "../api/axiosClient";
 import { useAuth } from "../context/AuthContext";
@@ -7,6 +7,8 @@ import { useCart } from "../context/CartContext";
 
 export default function ShopDetail() {
   const { shopId } = useParams();
+  const [searchParams] = useSearchParams();
+  const highlightQuery = searchParams.get("highlight")?.toLowerCase() || "";
   const { user } = useAuth();
   const { addToCart } = useCart();
 
@@ -246,16 +248,25 @@ export default function ShopDetail() {
           )}
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
-            {products.map((product) => {
-              const isOut = product.availability_status === 'out_of_stock';
-              const discountPercent = product.mrp && product.mrp > product.price 
-                ? Math.round(((product.mrp - product.price) / product.mrp) * 100) 
-                : 0;
+            {(() => {
+              const displayProducts = [...products].sort((a, b) => {
+                if (!highlightQuery) return 0;
+                const aMatch = a.name.toLowerCase().includes(highlightQuery) || (a.description && a.description.toLowerCase().includes(highlightQuery));
+                const bMatch = b.name.toLowerCase().includes(highlightQuery) || (b.description && b.description.toLowerCase().includes(highlightQuery));
+                return aMatch === bMatch ? 0 : aMatch ? -1 : 1;
+              });
+
+              return displayProducts.map((product) => {
+                const isOut = product.availability_status === 'out_of_stock';
+                const isHighlighted = highlightQuery && (product.name.toLowerCase().includes(highlightQuery) || (product.description && product.description.toLowerCase().includes(highlightQuery)));
+                const discountPercent = product.mrp && product.mrp > product.price 
+                  ? Math.round(((product.mrp - product.price) / product.mrp) * 100) 
+                  : 0;
 
               return (
                 <div 
                   key={product.product_id} 
-                  className={`product-card ${isOut || shop?.current_status !== 'open' ? 'opacity-70 grayscale-[0.2]' : 'cursor-pointer'}`}
+                  className={`product-card ${isOut || shop?.current_status !== 'open' ? 'opacity-70 grayscale-[0.2]' : 'cursor-pointer'} ${isHighlighted ? 'ring-2 ring-pulse border-pulse/50 shadow-md shadow-pulse/10 bg-pulse/5' : ''}`}
                   onClick={() => openProductModal(product)}
                 >
                   <div className="aspect-square bg-slate-50 relative p-4 flex items-center justify-center">
@@ -308,7 +319,8 @@ export default function ShopDetail() {
                   </div>
                 </div>
               );
-            })}
+            });
+          })()}
           </div>
         </div>
 
