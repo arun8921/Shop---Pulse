@@ -3,6 +3,8 @@ import { useOutletContext } from "react-router-dom";
 import apiClient from "../api/axiosClient";
 import { BUSINESS_CATEGORIES } from "../utils/categories";
 
+const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
 export default function OwnerSettings() {
   const { activeShop, loadShops } = useOutletContext();
   
@@ -18,6 +20,7 @@ export default function OwnerSettings() {
   const [scheduleForm, setScheduleForm] = useState({
     default_open_time: "09:00",
     default_close_time: "20:00",
+    closed_days: [],
   });
   const [savingSchedule, setSavingSchedule] = useState(false);
 
@@ -52,6 +55,7 @@ export default function OwnerSettings() {
     setScheduleForm({
       default_open_time: String(activeShop.default_open_time || "09:00").slice(0, 5),
       default_close_time: String(activeShop.default_close_time || "20:00").slice(0, 5),
+      closed_days: activeShop.closed_days ? activeShop.closed_days.split(",") : [],
     });
   }, [activeShop]);
 
@@ -103,6 +107,7 @@ export default function OwnerSettings() {
       await apiClient.patch(`/shops/${activeShop.shop_id}`, {
         default_open_time: scheduleForm.default_open_time,
         default_close_time: scheduleForm.default_close_time,
+        closed_days: scheduleForm.closed_days.join(","),
       });
 
       setMessage("Shop schedule updated successfully.");
@@ -264,6 +269,30 @@ export default function OwnerSettings() {
               className="px-3 py-2 border border-border rounded-md bg-bg text-ink focus:border-slate focus:outline-none focus:ring-2 focus:ring-slate/20"
             />
           </div>
+        </div>
+        <div className="mt-4">
+          <label className="block text-[13px] font-medium text-ink-soft mb-2">Weekly Off Days (Closed)</label>
+          <div className="flex flex-wrap gap-3">
+            {DAYS_OF_WEEK.map(day => (
+              <label key={day} className="flex items-center gap-1.5 text-[13.5px] text-ink cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={scheduleForm.closed_days.includes(day)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setScheduleForm(prev => ({ ...prev, closed_days: [...prev.closed_days, day] }));
+                    } else {
+                      setScheduleForm(prev => ({ ...prev, closed_days: prev.closed_days.filter(d => d !== day) }));
+                    }
+                  }}
+                  className="rounded text-pulse focus:ring-pulse border-border w-4 h-4 cursor-pointer"
+                />
+                {day}
+              </label>
+            ))}
+          </div>
+        </div>
+        <div className="mt-5">
           <button
             type="button"
             onClick={saveSchedule}
